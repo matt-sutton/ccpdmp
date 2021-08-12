@@ -1,5 +1,7 @@
-Concave-convex PDMP
+Untitled
 ================
+
+# Concave-convex PDMP
 
 ## Description
 
@@ -51,7 +53,7 @@ example_dnlogpi # Example potential calculation
     ## function(x, index){
     ##   return(x[index])
     ## }
-    ## <bytecode: 0x000000001292be68>
+    ## <bytecode: 0x0000000012808b20>
     ## <environment: namespace:ccpdmp>
 
 ``` r
@@ -59,7 +61,7 @@ z <- zigzag(1e3, example_dnlogpi, x0 = c(0,0), tau_max = 1, poly_order = 1)
 plot_pdmp(z, nsamples = 5e3, mcmc_samples = matrix(rnorm(10e3), ncol = 2), pch = '.')
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](read_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 The example\_dnlogpi is a function taking x, and index as arguments and
 returning a vector with elements $\\frac{dU(x+vt)}{dx\_i} = x\_i$ for

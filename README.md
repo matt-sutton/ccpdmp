@@ -6,6 +6,16 @@ This is a trimmed version of the code I have which focuses on simulating the rat
 
 The code in R contains the functions for implementing the Zig-Zag. 
 
+## Install
+
+First clone the repo locally. Install R and Rstudio. If you click the ccpdmp.Rproj it should open up Rstudio in a project. On the right you'll see all the files and information of the package. Before installing this package you may need to run the following to get some required packages:
+
+```{r}
+install.packages("Rcpp")
+install.packages("RcppArmadillo")
+```
+To compile and run this package press control shift B. You should be able to run the code below.
+
 ## A Quick example of the method
 
 We are interested in sampling a density:

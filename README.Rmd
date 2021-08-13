@@ -25,9 +25,11 @@ We are interested in sampling a density:
 
 $\pi(x) \propto \exp(-U(x))$
 
-A simple example is the normal distribution with mean zero and variance 1: $U(x) = 0.5x^2$. We need a function for the derivative of this:
+A simple example is the normal distribution with mean zero and variance 1: $U(x) = 0.5x^2$. We need a function which returns the partial derivatives of this:
 
 $U'_i(x) = x_i$
+
+The partial derivatives are the derivatives with respect to each element of the vector $x = (x_1,x_2,...,x_p)$ - sorry if you already know this it seems like more math knowledge so I thought I'd restate it here. The Zig-Zag process works by simulating event times (think discrete event simulation) with specified rates. For a p-dimensional $x$ there are p event times that need to be simulated. When one of these events i.e. the event $i$ occurs, the velocity $v_i$ is switched $-v_i$ and the process continues. Over a period of time $t$ the process evolves from position $x$ to position $x + vt$ unless an event occurs. 
 
 The rate for the i-th component of the Zig-Zag is $\lambda_i(t) = \max(0, U'_i(x)) = \max(0, x_i + v_it)$. This event rate (ignoring the max part) is linear. The code below shows how this can be simulated using the Zig-Zag process in this package. 
 
@@ -39,6 +41,6 @@ z <- zigzag(1e3, example_dnlogpi, x0 = c(0,0), tau_max = 1, poly_order = 1)
 plot_pdmp(z, nsamples = 5e3, mcmc_samples = matrix(rnorm(10e3), ncol = 2), pch = '.')
 ```
 
-The example_dnlogpi is a function taking x, and index as arguments and returning a vector with elements $\frac{dU(x+vt)}{dx_i} = x_i$ for all $i$ in the index argument. The polynomial order is 1 indicating a linear function is used to simulate the rate (which is exact here). The tau_max parameter indicates the maximum length of time considered ahead of the process. 
+The example_dnlogpi is a function taking x, and index as arguments and returning a vector with the partials $U'_i(x) = x_i$ for all $i$ in the index argument. The underlying concave-convex part of the algorithm will evaluate the rate at a given sequence of points, fit a polynomial and then employ Poisson thinning to simulate from this rate. Here the polynomial order is 1 indicating a linear function is used to simulate the rate (which is exact here). The tau_max parameter indicates the maximum length of time considered ahead of the process. 
 
 

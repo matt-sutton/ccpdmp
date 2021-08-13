@@ -33,10 +33,22 @@ We are interested in sampling a density:
 *π*(*x*) ∝ exp (−*U*(*x*))
 
 A simple example is the normal distribution with mean zero and variance
-1: *U*(*x*) = 0.5*x*<sup>2</sup>. We need a function for the derivative
-of this:
+1: *U*(*x*) = 0.5*x*<sup>2</sup>. We need a function which returns the
+partial derivatives of this:
 
 *U*′<sub>*i*</sub>(*x*) = *x*<sub>*i*</sub>
+
+The partial derivatives are the derivatives with respect to each element
+of the vector
+*x* = (*x*<sub>1</sub>,*x*<sub>2</sub>,...,*x*<sub>*p*</sub>) - sorry if
+you already know this it seems like more math knowledge so I thought I’d
+restate it here. The Zig-Zag process works by simulating event times
+(think discrete event simulation) with specified rates. For a
+p-dimensional *x* there are p event times that need to be simulated.
+When one of these events i.e. the event *i* occurs, the velocity
+*v*<sub>*i*</sub> is switched  − *v*<sub>*i*</sub> and the process
+continues. Over a period of time *t* the process evolves from position
+*x* to position *x* + *v**t* unless an event occurs.
 
 The rate for the i-th component of the Zig-Zag is
 *λ*<sub>*i*</sub>(*t*) = max (0,*U*′<sub>*i*</sub>(*x*)) = max (0,*x*<sub>*i*</sub>+*v*<sub>*i*</sub>*t*).
@@ -51,7 +63,7 @@ example_dnlogpi # Example potential calculation
     ## function(x, index){
     ##   return(x[index])
     ## }
-    ## <bytecode: 0x000000001292be68>
+    ## <bytecode: 0x0000000017bd8a18>
     ## <environment: namespace:ccpdmp>
 
 ``` r
@@ -62,8 +74,11 @@ plot_pdmp(z, nsamples = 5e3, mcmc_samples = matrix(rnorm(10e3), ncol = 2), pch =
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 The example\_dnlogpi is a function taking x, and index as arguments and
-returning a vector with elements $\\frac{dU(x+vt)}{dx\_i} = x\_i$ for
-all *i* in the index argument. The polynomial order is 1 indicating a
-linear function is used to simulate the rate (which is exact here). The
-tau\_max parameter indicates the maximum length of time considered ahead
-of the process.
+returning a vector with the partials
+*U*′<sub>*i*</sub>(*x*) = *x*<sub>*i*</sub> for all *i* in the index
+argument. The underlying concave-convex part of the algorithm will
+evaluate the rate at a given sequence of points, fit a polynomial and
+then employ Poisson thinning to simulate from this rate. Here the
+polynomial order is 1 indicating a linear function is used to simulate
+the rate (which is exact here). The tau\_max parameter indicates the
+maximum length of time considered ahead of the process.

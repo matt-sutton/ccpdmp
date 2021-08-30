@@ -2,6 +2,7 @@
 #define INVERSION_H
 #include <RcppArmadillo.h>
 
+
 // Simulate from a + bs
 // [[Rcpp::export]]
 arma::vec linear_inv_t(double a, double b, double u, double tmax) {
@@ -12,6 +13,22 @@ arma::vec linear_inv_t(double a, double b, double u, double tmax) {
   if(std::abs(u) < eps){
     return(res);
   }
+  // if always negative
+  if ( a <= eps & b <= eps ){
+    res(0) = tmax;
+    return(res);
+
+  } else if ( a > eps & abs(b) <= eps ){
+    // If constant rate
+    tsim = u/a;
+    if(tsim < tmax){
+      res(0) = tsim; res(1) = -u;
+    } else {
+      res(0) = tmax; res(1) = -a*tmax;
+    }
+    return(res);
+  }
+
   // Checked
   if( a < eps & b > eps){
     t_zero = -a/b;
@@ -58,19 +75,6 @@ arma::vec linear_inv_t(double a, double b, double u, double tmax) {
     } else {
       res(0) = tmax; res(1) = -(a*tmax + b*pow(tmax,2.0)/2.0);
     }
-    return(res);
-
-  } else if ( a > eps & abs(b) <= eps ){
-    tsim = u/a;
-    if(tsim < tmax){
-      res(0) = tsim; res(1) = -u;
-    } else {
-      res(0) = tmax; res(1) = -a*tmax;
-    }
-    return(res);
-
-  } else if ( a <= eps & b <= eps ){
-    res(0) = tmax;
     return(res);
   }
 }

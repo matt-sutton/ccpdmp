@@ -3,7 +3,7 @@ Type: Package
 Title: Concave Convex PDMP sampling
 Version: 0.1.0
 Author: Matt Sutton and Jake Bradford
-Maintainer: Matt Sutton 
+Maintainer: Matt Sutton <matt.sutton.stat@gmail.com>
 Description: Temporary package development
 License: What license is it under?
 Encoding: UTF-8

@@ -26,59 +26,214 @@ install.packages("RcppArmadillo")
 To compile and run this package press control shift B. You should be
 able to run the code below.
 
-## A Quick example of the method
+## Getting started
+
+It’s simplest to get started with a few examples where the probability
+distribution of interest has a particularly nice “smooth” form. To get
+sampling a distribution you need the following:
+
+1.  A probability distribution *π*(*x*) of interest i.e. a posterior
+    (Something from Stan, etc…)
+2.  A function that returns the derivatives
+     − ∂<sub>*i*</sub>log *π*(*x*) (also avaialable from Stan)
+3.  A condition on the smoothness (don’t worry about it :P)
+
+To sample a distribution these are the main requirements.
+
+### A quick example of the method
 
 We are interested in sampling a density:
 
-*π*(*x*) ∝ exp (−*U*(*x*))
+*π*(*x*) ∝ exp (−0.5*x*<sup>2</sup>)
 
-A simple example is the normal distribution with mean zero and variance
-1: *U*(*x*) = 0.5*x*<sup>2</sup>. We need a function which returns the
-partial derivatives of this:
+i.e the normal distribution with mean zero and variance 1. We need a
+function which returns the derivatives of negative log target:
 
-*U*′<sub>*i*</sub>(*x*) = *x*<sub>*i*</sub>
+ − ∂log *π*(*x*) = *x*
 
-The partial derivatives are the derivatives with respect to each element
-of the vector
-*x* = (*x*<sub>1</sub>,*x*<sub>2</sub>,...,*x*<sub>*p*</sub>) - sorry if
-you already know this it seems like more math knowledge so I thought I’d
-restate it here. The Zig-Zag process works by simulating event times
-(think discrete event simulation) with specified rates. For a
-p-dimensional *x* there are p event times that need to be simulated.
-When one of these events i.e. the event *i* occurs, the velocity
-*v*<sub>*i*</sub> is switched  − *v*<sub>*i*</sub> and the process
-continues. Over a period of time *t* the process evolves from position
-*x* to position *x* + *v**t* unless an event occurs.
-
-The rate for the i-th component of the Zig-Zag is
-*λ*<sub>*i*</sub>(*t*) = max (0,*U*′<sub>*i*</sub>(*x*)) = max (0,*x*<sub>*i*</sub>+*v*<sub>*i*</sub>*t*).
-This event rate (ignoring the max part) is linear. The code below shows
-how this can be simulated using the Zig-Zag process in this package.
+To use the package you provide a number of iterations for the algorithm
+(max_event), a function e.g. example_dnlogpi which returns the
+derivative of the negative log density, an initial point x0, and a
+smoothness constraint which is the poly order. So to sample a univariate
+(only 1 random variable) normal you could use the code below:
 
 ``` r
 library(ccpdmp)
-example_dnlogpi # Example potential calculation
-```
-
-    ## function(x, index){
-    ##   return(x[index])
-    ## }
-    ## <bytecode: 0x0000000017bd8a18>
-    ## <environment: namespace:ccpdmp>
-
-``` r
-z <- zigzag(1e3, example_dnlogpi, x0 = c(0,0), tau_max = 1, poly_order = 1)
-plot_pdmp(z, nsamples = 5e3, mcmc_samples = matrix(rnorm(10e3), ncol = 2), pch = '.')
+example_dnlogpi <- function(x, partial){
+  return(x)
+}
+zigzag_fit <- zigzag(max_events = 1e3, example_dnlogpi, x0 = c(0), poly_order = 1)
+samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = zigzag_fit$times)
+plot(density(samples$xx), col = 1, main = "Density plot for Zig Zag (black) and R's default normal sampler (red)")
+lines(density(rnorm(1e4)), col = 2)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
-The example\_dnlogpi is a function taking x, and index as arguments and
-returning a vector with the partials
-*U*′<sub>*i*</sub>(*x*) = *x*<sub>*i*</sub> for all *i* in the index
-argument. The underlying concave-convex part of the algorithm will
-evaluate the rate at a given sequence of points, fit a polynomial and
-then employ Poisson thinning to simulate from this rate. Here the
-polynomial order is 1 indicating a linear function is used to simulate
-the rate (which is exact here). The tau\_max parameter indicates the
-maximum length of time considered ahead of the process.
+When sampling a multivariate density you need a function that will
+return the partial derivatives of the negative log likelihood. The
+partial derivatives are the derivatives with respect to each element of
+the random variable
+*x* = (*x*<sub>1</sub>,*x*<sub>2</sub>,...,*x*<sub>*p*</sub>). To sample
+from a multivatiate normal:
+
+*π*(*x*<sub>1</sub>,*x*<sub>2</sub>) ∝ exp (−0.5*x*<sub>1</sub><sup>2</sup>−0.5*x*<sub>2</sub><sup>2</sup>)
+
+the partials are  − ∂<sub>1</sub>log *π*(*x*) = *x*<sub>1</sub> and
+ − ∂<sub>2</sub>log *π*(*x*) = *x*<sub>2</sub>. Running the sampler with
+this partial derivative function gives the following:
+
+``` r
+example_dnlogpi <- function(x, partial){
+  return(x[partial])
+}
+z <- zigzag(1e3, example_dnlogpi, x0 = c(0,0), poly_order = 1)
+plot_pdmp(z, nsamples = 1e3)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+This plot show’s a bit more of what the sampler is doing. The Zig-Zag
+process returns a bunch of line segements where the sampler has visited,
+the red dots are samples harvested along these lines. Once the Zig-Zag
+has been run we can use the line segments to generate samples either
+using the function gen_samples (which you can see in the univatiate
+example) or visually using the plotting function. These samples give an
+approximation of the distribution of interest. The two density plots on
+the diagonal are estimates of the marginal densities, these show areas
+where the parameter value *x*<sub>1</sub> or *x*<sub>2</sub> are more
+likely. The plots on the off diagonals show the joint distribution -
+i.e. where the parameters are jointly likly to occur.
+
+We can also consider a more interesting function to look at. The
+distribution below is called the banana distribution:
+
+*π*(*x*<sub>1</sub>,*x*<sub>2</sub>) ∝ exp ( − (*x*<sub>1</sub>−1)<sup>2</sup> + *κ*(*x*<sub>2</sub>−*x*<sub>1</sub><sup>2</sup>)<sup>2</sup>
+
+Taking the derivatives gives the function shown below:
+
+``` r
+kappa <- 1 ## Arbitrary choice
+
+dnlogpi <- function(x, index){
+  x1 <- x[1]; x2 <- x[2]
+  grad <- c(2*(x1-1) + 4*kappa*(x1^2-x2)*x1,  ## partial x_1
+            2*kappa*(x2-x1^2))                ## partial x_2
+  return(grad[index])
+}
+## Higher smoothness constraint poly = 3
+z <- zigzag(5e3, dnlogpi, x0 = c(0,0), poly_order = 3) 
+## inds shows how much of the ZigZag trajectory to plot and pch is for plotting smaller circles
+plot_pdmp(z,inds = 1:5e3, nsamples = 5e3, pch = '.')   
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+## Pulling something from stan
+
+A very quick example from stan could be given as:
+
+``` r
+library(rstan)
+stanmodelcode <- "
+data {
+  int<lower=0> N;
+  real y[N];
+} 
+
+parameters {
+  real mu;
+} 
+
+model {
+  target += normal_lpdf(mu | 0, 10);
+  target += normal_lpdf(y  | mu, 1);
+} 
+"
+
+y <- rnorm(20) 
+dat <- list(N = 20, y = y); 
+fit <- stan(model_code = stanmodelcode, model_name = "example", warmup = 100,
+            data = dat, iter = 5000, chains = 1, verbose = FALSE) 
+```
+
+    ## 
+    ## SAMPLING FOR MODEL 'example' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: WARNING: There aren't enough warmup iterations to fit the
+    ## Chain 1:          three stages of adaptation as currently configured.
+    ## Chain 1:          Reducing each adaptation stage to 15%/75%/10% of
+    ## Chain 1:          the given number of warmup iterations:
+    ## Chain 1:            init_buffer = 15
+    ## Chain 1:            adapt_window = 75
+    ## Chain 1:            term_buffer = 10
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 5000 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  101 / 5000 [  2%]  (Sampling)
+    ## Chain 1: Iteration:  600 / 5000 [ 12%]  (Sampling)
+    ## Chain 1: Iteration: 1100 / 5000 [ 22%]  (Sampling)
+    ## Chain 1: Iteration: 1600 / 5000 [ 32%]  (Sampling)
+    ## Chain 1: Iteration: 2100 / 5000 [ 42%]  (Sampling)
+    ## Chain 1: Iteration: 2600 / 5000 [ 52%]  (Sampling)
+    ## Chain 1: Iteration: 3100 / 5000 [ 62%]  (Sampling)
+    ## Chain 1: Iteration: 3600 / 5000 [ 72%]  (Sampling)
+    ## Chain 1: Iteration: 4100 / 5000 [ 82%]  (Sampling)
+    ## Chain 1: Iteration: 4600 / 5000 [ 92%]  (Sampling)
+    ## Chain 1: Iteration: 5000 / 5000 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 0.001 seconds (Warm-up)
+    ## Chain 1:                0.042 seconds (Sampling)
+    ## Chain 1:                0.043 seconds (Total)
+    ## Chain 1:
+
+``` r
+print(fit)
+```
+
+    ## Inference for Stan model: example.
+    ## 1 chains, each with iter=5000; warmup=100; thin=1; 
+    ## post-warmup draws per chain=4900, total post-warmup draws=4900.
+    ## 
+    ##        mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff Rhat
+    ## mu    -0.09    0.01 0.22  -0.52  -0.24  -0.09   0.06   0.35  1726    1
+    ## lp__ -26.91    0.01 0.69 -28.85 -27.06 -26.64 -26.46 -26.41  2588    1
+    ## 
+    ## Samples were drawn using NUTS(diag_e) at Fri Nov 26 17:21:15 2021.
+    ## For each parameter, n_eff is a crude measure of effective sample size,
+    ## and Rhat is the potential scale reduction factor on split chains (at 
+    ## convergence, Rhat=1).
+
+``` r
+## Extract Stan samples
+stan_samples <- extract(fit, 'mu')
+```
+
+This model has a single parameter *μ*, the gradient of the log posterior
+can be returned using the function \`grad_log_prob’ from Stan. This
+means we can put it in our sampler. One thing to be careful about is
+that the stan function returns the gradient of the log posterior and we
+want the NEGATIVE of this.
+
+``` r
+dnlogpi <- function(x, partial){
+  grad <- -1 * grad_log_prob(fit, x) ## return the gradient of the negative log posterior
+  return(grad[partial])
+}
+system.time(zigzag_fit <- zigzag(1e3, dnlogpi, x0 = c(0), poly_order = 1)) ## Using 1/5 the number of iterations.
+```
+
+    ##    user  system elapsed 
+    ##    0.16    0.00    0.15
+
+``` r
+samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = zigzag_fit$times)
+plot(density(samples$xx), col = 1, main = "Density plot for Zig Zag (black) and STAN (red)")
+lines(density(stan_samples$mu), col = 2)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->

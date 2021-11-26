@@ -35,10 +35,21 @@ The rate for the i-th component of the Zig-Zag is $\lambda_i(t) = \max(0, U'_i(x
 
 ```{r}
 library(ccpdmp)
-example_dnlogpi # Example potential calculation
-
+example_dnlogpi <- function(x, index){
+  return(x[index])
+}
 z <- zigzag(1e3, example_dnlogpi, x0 = c(0,0), tau_max = 1, poly_order = 1)
 plot_pdmp(z, nsamples = 5e3, mcmc_samples = matrix(rnorm(10e3), ncol = 2), pch = '.')
+
+kappa <- 1
+get_grad <- function(x, index){
+  x1 <- x[1]; x2 <- x[2]
+  grad <- c(2*(x1-1) + 4*kappa*(x1^2-x2)*x1,
+            2*kappa*(x2-x1^2))
+  return(grad[index])
+}
+z <- zigzag(1e3, get_grad, x0 = c(0,0), tau_max = 1, poly_order = 3)
+plot_pdmp(z, nsamples = 5e3, pch = '.')
 ```
 
 The example_dnlogpi is a function taking x, and index as arguments and returning a vector with the partials $U'_i(x) = x_i$ for all $i$ in the index argument. The underlying concave-convex part of the algorithm will evaluate the rate at a given sequence of points, fit a polynomial and then employ Poisson thinning to simulate from this rate. Here the polynomial order is 1 indicating a linear function is used to simulate the rate (which is exact here). The tau_max parameter indicates the maximum length of time considered ahead of the process. 

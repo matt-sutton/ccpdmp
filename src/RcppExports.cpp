@@ -6,6 +6,36 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
+// bps
+List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_updates, const List& Data, const arma::vec y, arma::vec x0, arma::vec theta0, arma::uvec trac_coords, double tmax, int poly_order, int nmax, int burn, double ref_rate, bool sphere);
+RcppExport SEXP _ccpdmp_bps(SEXP maxTimeSEXP, SEXP rate_fSEXP, SEXP factorsSEXP, SEXP local_updatesSEXP, SEXP DataSEXP, SEXP ySEXP, SEXP x0SEXP, SEXP theta0SEXP, SEXP trac_coordsSEXP, SEXP tmaxSEXP, SEXP poly_orderSEXP, SEXP nmaxSEXP, SEXP burnSEXP, SEXP ref_rateSEXP, SEXP sphereSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type maxTime(maxTimeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type rate_f(rate_fSEXP);
+    Rcpp::traits::input_parameter< const List& >::type factors(factorsSEXP);
+    Rcpp::traits::input_parameter< const List& >::type local_updates(local_updatesSEXP);
+    Rcpp::traits::input_parameter< const List& >::type Data(DataSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type theta0(theta0SEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type trac_coords(trac_coordsSEXP);
+    Rcpp::traits::input_parameter< double >::type tmax(tmaxSEXP);
+    Rcpp::traits::input_parameter< int >::type poly_order(poly_orderSEXP);
+    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< double >::type ref_rate(ref_rateSEXP);
+    Rcpp::traits::input_parameter< bool >::type sphere(sphereSEXP);
+    rcpp_result_gen = Rcpp::wrap(bps(maxTime, rate_f, factors, local_updates, Data, y, x0, theta0, trac_coords, tmax, poly_order, nmax, burn, ref_rate, sphere));
+    return rcpp_result_gen;
+END_RCPP
+}
 // linear_inv_t
 arma::vec linear_inv_t(double a, double b, double u, double tmax);
 RcppExport SEXP _ccpdmp_linear_inv_t(SEXP aSEXP, SEXP bSEXP, SEXP uSEXP, SEXP tmaxSEXP) {
@@ -46,11 +76,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// zigzag_cpp
+List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& local_updates, const List& Data, const arma::vec y, arma::vec x0, arma::vec theta0, arma::uvec trac_coords, double tmax, int poly_order, int nmax, int burn);
+RcppExport SEXP _ccpdmp_zigzag_cpp(SEXP maxTimeSEXP, SEXP rate_fSEXP, SEXP factorsSEXP, SEXP local_updatesSEXP, SEXP DataSEXP, SEXP ySEXP, SEXP x0SEXP, SEXP theta0SEXP, SEXP trac_coordsSEXP, SEXP tmaxSEXP, SEXP poly_orderSEXP, SEXP nmaxSEXP, SEXP burnSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type maxTime(maxTimeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type rate_f(rate_fSEXP);
+    Rcpp::traits::input_parameter< const List& >::type factors(factorsSEXP);
+    Rcpp::traits::input_parameter< const List& >::type local_updates(local_updatesSEXP);
+    Rcpp::traits::input_parameter< const List& >::type Data(DataSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type theta0(theta0SEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type trac_coords(trac_coordsSEXP);
+    Rcpp::traits::input_parameter< double >::type tmax(tmaxSEXP);
+    Rcpp::traits::input_parameter< int >::type poly_order(poly_orderSEXP);
+    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    rcpp_result_gen = Rcpp::wrap(zigzag_cpp(maxTime, rate_f, factors, local_updates, Data, y, x0, theta0, trac_coords, tmax, poly_order, nmax, burn));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_ccpdmp_bps", (DL_FUNC) &_ccpdmp_bps, 15},
     {"_ccpdmp_linear_inv_t", (DL_FUNC) &_ccpdmp_linear_inv_t, 4},
     {"_ccpdmp_exp_inv_t", (DL_FUNC) &_ccpdmp_exp_inv_t, 3},
     {"_ccpdmp_sim_rate_poly", (DL_FUNC) &_ccpdmp_sim_rate_poly, 3},
+    {"_ccpdmp_zigzag_cpp", (DL_FUNC) &_ccpdmp_zigzag_cpp, 13},
     {NULL, NULL, 0}
 };
 

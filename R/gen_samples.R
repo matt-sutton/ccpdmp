@@ -5,7 +5,7 @@ gen_samples <- function(positions, times, theta=NULL,
   if(is.null(dim(positions))) positions <- matrix(positions, nrow = 1)
 
   positions <- positions[,burn:length(times), drop = F]
-  theta <- theta[,burn:length(times), drop = F]
+  if(dynamics != 'lin') {theta <- theta[,burn:length(times), drop = F]}
   times <- times[burn:length(times)] - times[burn]
   nsteps <- length(times)
 

@@ -1,7 +1,11 @@
 #include <RcppArmadillo.h>
 using namespace Rcpp;
-#include "poly.h"
+#include "types.h"
 #include "piecewise.h"
+#include "poly.h"
+#include "zigzag_cpp.h"
+#include "bps.h"
+
 
 // [[Rcpp::export]]
 List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order ){

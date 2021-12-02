@@ -94,7 +94,7 @@ plot_pdmp(z, nsamples = 1e3)
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 This plot show’s a bit more of what the sampler is doing. The Zig-Zag
-process returns a bunch of line segements where the sampler has visited,
+process returns a bunch of line segments where the sampler has visited,
 the red dots are samples harvested along these lines. Once the Zig-Zag
 has been run we can use the line segments to generate samples either
 using the function gen_samples (which you can see in the univatiate
@@ -103,7 +103,7 @@ approximation of the distribution of interest. The two density plots on
 the diagonal are estimates of the marginal densities, these show areas
 where the parameter value *x*<sub>1</sub> or *x*<sub>2</sub> are more
 likely. The plots on the off diagonals show the joint distribution -
-i.e. where the parameters are jointly likly to occur.
+i.e. where the parameters are jointly likely to occur.
 
 We can also consider a more interesting function to look at. The
 distribution below is called the banana distribution:
@@ -186,9 +186,9 @@ fit <- stan(model_code = stanmodelcode, model_name = "example", warmup = 100,
     ## Chain 1: Iteration: 4600 / 5000 [ 92%]  (Sampling)
     ## Chain 1: Iteration: 5000 / 5000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.001 seconds (Warm-up)
-    ## Chain 1:                0.042 seconds (Sampling)
-    ## Chain 1:                0.043 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0 seconds (Warm-up)
+    ## Chain 1:                0.052 seconds (Sampling)
+    ## Chain 1:                0.052 seconds (Total)
     ## Chain 1:
 
 ``` r
@@ -200,10 +200,10 @@ print(fit)
     ## post-warmup draws per chain=4900, total post-warmup draws=4900.
     ## 
     ##        mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff Rhat
-    ## mu    -0.09    0.01 0.22  -0.52  -0.24  -0.09   0.06   0.35  1726    1
-    ## lp__ -26.91    0.01 0.69 -28.85 -27.06 -26.64 -26.46 -26.41  2588    1
+    ## mu    -0.07    0.01 0.23  -0.52  -0.22  -0.07   0.08   0.36  1835    1
+    ## lp__ -30.29    0.01 0.72 -32.36 -30.47 -30.01 -29.83 -29.78  2733    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Fri Nov 26 17:21:15 2021.
+    ## Samples were drawn using NUTS(diag_e) at Fri Dec 03 07:06:23 2021.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -228,7 +228,7 @@ system.time(zigzag_fit <- zigzag(1e3, dnlogpi, x0 = c(0), poly_order = 1)) ## Us
 ```
 
     ##    user  system elapsed 
-    ##    0.16    0.00    0.15
+    ##    0.19    0.00    0.19
 
 ``` r
 samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = zigzag_fit$times)

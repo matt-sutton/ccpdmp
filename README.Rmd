@@ -66,7 +66,7 @@ plot_pdmp(z, nsamples = 1e3)
 ```
 
 
-This plot show's a bit more of what the sampler is doing. The Zig-Zag process returns a bunch of line segements where the sampler has visited, the red dots are samples harvested along these lines. Once the Zig-Zag has been run we can use the line segments to generate samples either using the function gen_samples (which you can see in the univatiate example) or visually using the plotting function. These samples give an approximation of the distribution of interest. The two density plots on the diagonal are estimates of the marginal densities, these show areas where the parameter value $x_1$ or $x_2$ are more likely. The plots on the off diagonals show the joint distribution - i.e. where the parameters are jointly likly to occur. 
+This plot show's a bit more of what the sampler is doing. The Zig-Zag process returns a bunch of line segments where the sampler has visited, the red dots are samples harvested along these lines. Once the Zig-Zag has been run we can use the line segments to generate samples either using the function gen_samples (which you can see in the univatiate example) or visually using the plotting function. These samples give an approximation of the distribution of interest. The two density plots on the diagonal are estimates of the marginal densities, these show areas where the parameter value $x_1$ or $x_2$ are more likely. The plots on the off diagonals show the joint distribution - i.e. where the parameters are jointly likely to occur. 
 
 We can also consider a more interesting function to look at. The distribution below is called the banana distribution:
 

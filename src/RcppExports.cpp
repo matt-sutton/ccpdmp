@@ -63,6 +63,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sim_rates
+List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order, int n_points);
+RcppExport SEXP _ccpdmp_sim_rates(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP poly_orderSEXP, SEXP n_pointsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type eval_times(eval_timesSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type eval_rates(eval_ratesSEXP);
+    Rcpp::traits::input_parameter< int >::type poly_order(poly_orderSEXP);
+    Rcpp::traits::input_parameter< int >::type n_points(n_pointsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_rates(eval_times, eval_rates, poly_order, n_points));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_rate_poly
 List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order);
 RcppExport SEXP _ccpdmp_sim_rate_poly(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP poly_orderSEXP) {
@@ -104,6 +118,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_ccpdmp_bps", (DL_FUNC) &_ccpdmp_bps, 15},
     {"_ccpdmp_linear_inv_t", (DL_FUNC) &_ccpdmp_linear_inv_t, 4},
     {"_ccpdmp_exp_inv_t", (DL_FUNC) &_ccpdmp_exp_inv_t, 3},
+    {"_ccpdmp_sim_rates", (DL_FUNC) &_ccpdmp_sim_rates, 4},
     {"_ccpdmp_sim_rate_poly", (DL_FUNC) &_ccpdmp_sim_rate_poly, 3},
     {"_ccpdmp_zigzag_cpp", (DL_FUNC) &_ccpdmp_zigzag_cpp, 13},
     {NULL, NULL, 0}

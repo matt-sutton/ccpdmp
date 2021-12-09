@@ -42,13 +42,10 @@ public:
   // Get intercept (a) and gradients (b)
   arma::vec get_ab(std::pair<double, arma::vec> f0, std::pair<double, arma::vec> f1) {
     // ab_values = (a0,b0,t0,a1,b1,t1)
-    // Rcout << "RUN?";
     arma::vec ab_values(6);
     ab_values.zeros();
-    // Rcout << "RUN?";
     // Convex part
     double b_u = (f1.second[0] - f0.second[0])/(f1.first - f0.first);
-    // Rcout << "RUN?";
     double a_u = f1.second[0] - b_u*f1.first;
 
     // Concave part 1
@@ -114,11 +111,8 @@ public:
     std::map< double, arma::vec >::iterator it_t0, it_t1;
     // Rcout << " t " << tu(0);
     // print_times();
-    it_t0 = fEvaluations.lower_bound(tu(0)-1e-14); // Need to subtract for rounding precision. Consider upper_bound?
-    // Rcout << "run?";
-    // Rcout <<" tm " << tu;
+    it_t0 = fEvaluations.lower_bound(tu(0)-1e-14); // Need to subtract for rounding precision.
     double tmax = (*std::prev(fEvaluations.end(),1)).first;
-    // Rcout << " Time:" << (*it_t0).first;
     // ab_values = (a0,b0,t0,a1,b1,t1)
     arma::vec ab_values(6);
     while( tu(0) < tmax ) {

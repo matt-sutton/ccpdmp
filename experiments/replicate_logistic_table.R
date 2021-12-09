@@ -1,6 +1,7 @@
 ## Replicate Table 1 Increasing poly order for logistic regression
 ## See logistic.R for a simple example
 ##
+library(ccpdmp)
 generate.logistic.data <- function(beta, n.obs, siginv) {
   p <- length(beta)
   dataX <- mvtnorm::rmvnorm(n=n.obs*p,sigma = solve(siginv))

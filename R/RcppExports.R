@@ -13,6 +13,10 @@ exp_inv_t <- function(a, b, u) {
     .Call(`_ccpdmp_exp_inv_t`, a, b, u)
 }
 
+sim_rates <- function(eval_times, eval_rates, poly_order, n_points = -1L) {
+    .Call(`_ccpdmp_sim_rates`, eval_times, eval_rates, poly_order, n_points)
+}
+
 sim_rate_poly <- function(eval_times, eval_rates, poly_order) {
     .Call(`_ccpdmp_sim_rate_poly`, eval_times, eval_rates, poly_order)
 }

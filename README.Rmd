@@ -5,19 +5,17 @@ output: github_document
 
 ## Description
 
-This is a trimmed version of the code I have which focuses on simulating the rate using the CC-PDMP approach and the algorithm for Zig-Zag in R. The c++ code is in the src directory and consists of classes to simulate a rate based on a concave-convex decomposition, evaluate and construct a polynomial and simulate a rate based on a polynomial bound. 
-
-The code in R contains the functions for implementing the Zig-Zag. 
+This package implements the concave-convex PDMP algorithm to facilitate sampling from distributions of interest (particularly Bayesian distributions). I've put together some basic introduction below and there are additional examples in the experiments folder. I'd recommend you go through the steps below before diving into the experiments - I haven't written them up very well yet. 
 
 ## Install
 
-First clone the repo locally. Install R and Rstudio. If you click the ccpdmp.Rproj it should open up Rstudio in a project. On the right you'll see all the files and information of the package. Before installing this package you may need to run the following to get some required packages:
+First clone the repo locally. Install R and Rstudio. If you click the ccpdmp.Rproj it should open up Rstudio in a project. Before installing this package you may need to run the following to get some required packages:
 
 ```{r, eval=FALSE}
 install.packages("Rcpp")
 install.packages("RcppArmadillo")
 ```
-To compile and run this package press control shift B. You should be able to run the code below.
+To compile and run this package press control shift B. After that, you should be able to run the code below.
 
 ## Getting started
 
@@ -27,7 +25,7 @@ It's simplest to get started with a few examples where the probability distribut
 2. A function that returns the derivatives $-\partial_i\log \pi(x)$ (also avaialable from Stan)
 3. A condition on the smoothness (don't worry about it :P)
 
-To sample a distribution these are the main requirements.
+To sample a distribution these are the main requirements. In the sections below I give a two simple examples and then an example that uses STAN to get the derivative (step 2).
 
 ### A quick example of the method
 
@@ -49,7 +47,9 @@ example_dnlogpi <- function(x, partial){
 zigzag_fit <- zigzag(max_events = 1e3, example_dnlogpi, x0 = c(0), poly_order = 1)
 samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = zigzag_fit$times)
 plot(density(samples$xx), col = 1, main = "Density plot for Zig Zag (black) and R's default normal sampler (red)")
-lines(density(rnorm(1e4)), col = 2)
+
+samples_from_r <- rnorm(1e4) # Get 10000 samples from R's basic normal distribution sampler
+lines(density(samples_from_r), col = 2)
 ```
 
 When sampling a multivariate density you need a function that will return the partial derivatives of the negative log likelihood. The partial derivatives are the derivatives with respect to each element of the random variable $x = (x_1,x_2,...,x_p)$. To sample from a multivatiate normal:
@@ -66,7 +66,7 @@ plot_pdmp(z, nsamples = 1e3)
 ```
 
 
-This plot show's a bit more of what the sampler is doing. The Zig-Zag process returns a bunch of line segments where the sampler has visited, the red dots are samples harvested along these lines. Once the Zig-Zag has been run we can use the line segments to generate samples either using the function gen_samples (which you can see in the univatiate example) or visually using the plotting function. These samples give an approximation of the distribution of interest. The two density plots on the diagonal are estimates of the marginal densities, these show areas where the parameter value $x_1$ or $x_2$ are more likely. The plots on the off diagonals show the joint distribution - i.e. where the parameters are jointly likely to occur. 
+This plot show's a bit more of what the sampler is doing. The Zig-Zag process returns a bunch of line segments where the sampler has visited, the red dots are samples harvested along these lines. Once the Zig-Zag has been run we can use the line segments to generate samples either using the function gen_samples (which you can see in the univatiate example) or visually using the plotting function. These samples give an approximation of the distribution of interest. 
 
 We can also consider a more interesting function to look at. The distribution below is called the banana distribution:
 
@@ -92,7 +92,7 @@ plot_pdmp(z,inds = 1:5e3, nsamples = 5e3, pch = '.')
 
 ## Pulling something from stan
 
-A very quick example from stan could be given as:
+Working our derivatives is time consuming and a bit of a deterrent to using the sampler. Fortunatley we can use Stan to work out derivatives automatically. A very quick example from stan could be given as:
 
 ```{r, warning=FALSE, message=FALSE}
 library(rstan)
@@ -114,6 +114,8 @@ model {
 
 y <- rnorm(20) 
 dat <- list(N = 20, y = y); 
+
+## Running Stan to fit the model 
 fit <- stan(model_code = stanmodelcode, model_name = "example", warmup = 100,
             data = dat, iter = 5000, chains = 1, verbose = FALSE) 
 print(fit)
@@ -134,4 +136,6 @@ samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = 
 plot(density(samples$xx), col = 1, main = "Density plot for Zig Zag (black) and STAN (red)")
 lines(density(stan_samples$mu), col = 2)
 ```
+
+
 

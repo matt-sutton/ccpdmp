@@ -20,6 +20,7 @@ y <- rnorm(N*G)
 y_split <- matrix(y, ncol = G)
 model <- stan_model(model_code = stanmodelcode, model_name = "example")
 
+## A control variate is a guess at where the distribution is most concentrated
 control_variate <- mean(y)
 dat <- list(N = N*G, y = y);
 fit_full <- sampling(model, warmup = 10,

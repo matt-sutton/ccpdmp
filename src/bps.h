@@ -24,6 +24,10 @@ List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_upd
   arma::vec clock_taus(numRates), clock_old(numRates);
   arma::ivec sk_flip(nmax);
 
+  if(sphere){
+    theta /= sqrt(arma::dot(theta, theta));
+  }
+
   arma::mat sk_points(trac_coords.size(), nmax);
   sk_points.col(0) = x(trac_coords);
 
@@ -109,20 +113,12 @@ List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_upd
 
       // Not found on increment //
       if(tau_val + tau_rel >= tmax - 2*eps){
-        t += tau_val;
-        clock_old(mini) = t;
+        clock_old(mini) = t + tau_val;
 
-        // Update elements of factor //
-        state_updates = local_rates[mini].get_state_update();
-        for(arma::uvec::iterator st = state_updates.begin(); st != state_updates.end(); ++st){
-          int state = *st;
-          x(state) += (t - theta_times(state))*theta(state);
-          theta_times(state) = t;
-        }
         // Propose new time //
-        local_rates[mini].refresh(s_eval, t);
+        local_rates[mini].refresh(s_eval, t + tau_val);
         local_rates[mini].sim_time();
-        clock_taus(mini) = t + local_rates[mini].get_tau();
+        clock_taus(mini) = clock_old(mini) + local_rates[mini].get_tau();
 
         elt = Elt(clock_taus(mini), mini);
         tau_queue.push(elt);
@@ -138,17 +134,6 @@ List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_upd
 
           // Update states
           t += tau_val;
-          state_updates = local_rates[mini].get_state_update();
-          for(arma::uvec::iterator st = state_updates.begin(); st != state_updates.end(); ++st){
-            int state = *st;
-            x(state) += (t - theta_times(state))*theta(state);
-            theta_times(state) = t;
-          }
-
-          // Update Theta
-          local_rates[mini].bounce_bps();
-
-          // Update States
           factor_updates = local_rates[mini].get_local_update();
           for (arma::uvec::iterator f = factor_updates.begin(); f != factor_updates.end(); ++f){
             int fac = *f;
@@ -161,6 +146,10 @@ List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_upd
               theta_times(state) = t;
             }
           }
+
+          // Update Theta
+          local_rates[mini].bounce_bps();
+
           // Update Times
           for (arma::uvec::iterator f = factor_updates.begin(); f != factor_updates.end(); ++f){
             int fac = *f;
@@ -185,6 +174,10 @@ List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_upd
           nEvent++;
 
         } else {
+          //
+          clock_old(mini) = t+tau_val;
+          local_rates[mini].refresh(s_eval, clock_old(mini));
+          //
           local_rates[mini].sim_time();
           clock_taus(mini) = clock_old(mini) + local_rates[mini].get_tau();
 

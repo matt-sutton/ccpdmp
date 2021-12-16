@@ -69,6 +69,4 @@ return_rates_3 <- function(x, theta, tau_grid, dnlogpi, rate_updates){
 n_ev <- 1e4
 set.seed(1);z_3 <- zigzag(max_events = n_ev,  return_rates = return_rates_3, dnlogpi = get_grad,
                           x0 = beta, tau_max = 1, poly_order = 3, adapt_tau_max = T)
-n_ev/z_j$n_iterations
-
 plot_pdmp(o1 = z_3,pch = '.',coords = c(1,2,p), nsamples = 1e3, inds = 1:1e3)

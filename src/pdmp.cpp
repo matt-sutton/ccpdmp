@@ -5,9 +5,12 @@ using namespace Rcpp;
 #include "poly.h"
 #include "zigzag_cpp.h"
 #include "bps.h"
+#include "hmc.h"
+#include "mala.h"
+
 
 // [[Rcpp::export]]
-List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order, int n_points = -1 ){
+List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order = 0, int n_points = -1, double u = -1 ){
 
   piecewise f_pw;
   poly poly_approx;
@@ -29,7 +32,12 @@ List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order, int n
   }
 
   arma::vec tausim(2);
-  tausim(0) = 0.0; tausim(1) = R::rexp(1);
+  tausim(0) = 0.0;
+  if(u < 0) {
+    tausim(1) = R::rexp(1);
+    } else {
+    tausim(1) = u;
+  };
   tausim = f_pw.simt(tausim);
 
   double upper = 0;

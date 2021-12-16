@@ -10,18 +10,18 @@
 #include "rate.h"
 
 // [[Rcpp::export]]
-List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& local_updates,
+List zigzag_cpp(double maxTime, SEXP rate_f, const List& local_updates,
          const List& Data, const arma::vec y, arma::vec x0, arma::vec theta0,
          arma::uvec trac_coords, double tmax = 1.0, int poly_order = 0,
          int nmax = 10^6, int burn = -1){
 
-  int p = x0.size(), nEvent= 1, numRates = factors.size();
+  int p = x0.size(), nEvent= 1;
   double eps = 1e-10, t = 0.0, tau_val, tau_rel;
   bool check_event = true, autoTmax = false, event = false;
 
   // Information on states and velocities
   arma::vec sk_times(nmax), theta = theta0, x = x0, grad_vals(p), theta_times(p);
-  arma::vec clock_taus(numRates), clock_old(numRates);
+  arma::vec clock_taus(p), clock_old(p);
   arma::ivec sk_flip(nmax);
 
   arma::mat sk_points(trac_coords.size(), nmax);
@@ -36,7 +36,7 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
   int nShadow = 0, nRef = 0, nIterall = 0;
 
   std::vector<cave_vex_rate> local_rates;
-  local_rates.reserve(numRates);
+  local_rates.reserve(p);
 
   typedef std::pair<double, int> Elt;
   std::priority_queue<Elt, std::vector<Elt>, std::greater<Elt> > tau_queue;
@@ -51,10 +51,10 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
   }
   s_eval(0) = 0.0; s_eval(poly_order+1) = tmax;
 
-  arma::uvec factor_updates, state_updates;
+  arma::uvec factor_updates, state_updates, state_ind(1);
   Elt elt;
-  for (int i = 0; i < numRates; i++){
-    arma::uvec state_ind = factors[i];
+  for (int i = 0; i < p; i++){
+    state_ind(0) = i;
     arma::uvec local_update = local_updates[i];
     local_rates.push_back( cave_vex_rate(x, theta, local_update, grad_vals,
                                              rate_f, y, Data, theta_times, state_ind) );
@@ -66,7 +66,7 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
     tau_queue.push(elt);
   }
   //Add refreshment rate
-  // elt = Elt(-log(R::runif(0,1))/ref_rate, numRates);
+  // elt = Elt(-log(R::runif(0,1))/ref_rate, p);
   // tau_queue.push(elt);
 
   arma::wall_clock timer;
@@ -77,30 +77,24 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
   while( nEvent < nmax + burn){
     nIterall++;
     elt = tau_queue.top();
-    mini = elt.second;
-    tau_queue.pop();
 
-    if(std::abs(clock_taus(elt.second) - elt.first) < eps){
+    mini = elt.second; // Factor with smallest time
+    tau_queue.pop(); // remove factor
 
-      tau_val = clock_taus(mini) - t;
-      tau_rel = t - clock_old(mini);
+    if(std::abs(clock_taus(mini) - elt.first) < eps*2){
+
+      tau_val = clock_taus(mini) - t;  // How far in the future it is
+      tau_rel = t - clock_old(mini);   //
 
       // Not found on increment //
       if(tau_val + tau_rel >= tmax - 2*eps){
-        t += tau_val;
-        clock_old(mini) = t;
+        // t += tau_val;
+        clock_old(mini) = t + tau_val;
 
-        // Update elements of factor //
-        state_updates = local_rates[mini].get_state_update();
-        for(arma::uvec::iterator st = state_updates.begin(); st != state_updates.end(); ++st){
-          int state = *st;
-          x(state) += (t - theta_times(state))*theta(state);
-          theta_times(state) = t;
-        }
         // Propose new time //
-        local_rates[mini].refresh(s_eval, t);
+        local_rates[mini].refresh(s_eval, t + tau_val);
         local_rates[mini].sim_time();
-        clock_taus(mini) = t + local_rates[mini].get_tau();
+        clock_taus(mini) = clock_old(mini) + local_rates[mini].get_tau();
 
         elt = Elt(clock_taus(mini), mini);
         tau_queue.push(elt);
@@ -112,33 +106,22 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
         check_event = local_rates[mini].thinning(tau_val, tau_rel, t);
         if( check_event ){
           event = true;
-          clock_old(mini) = t;
 
           // Update states
           t += tau_val;
-          state_updates = local_rates[mini].get_state_update();
-          for(arma::uvec::iterator st = state_updates.begin(); st != state_updates.end(); ++st){
-            int state = *st;
-            x(state) += (t - theta_times(state))*theta(state);
-            theta_times(state) = t;
-          }
+          x(mini) += (t - theta_times(mini))*theta(mini);
+          theta_times(mini) = t;
+          factor_updates = local_rates[mini].get_local_update();
+          // for (arma::uvec::iterator f = factor_updates.begin(); f != factor_updates.end(); ++f){
+          //   int fac = *f;
+          //   // Update states associated to factor (each element)
+          //   x(fac) += (t - theta_times(fac))*theta(fac);
+          //   theta_times(fac) = t;
+          // }
 
           // Update Theta
           local_rates[mini].bounce_zigzag();
 
-          // Update States
-          factor_updates = local_rates[mini].get_local_update();
-          for (arma::uvec::iterator f = factor_updates.begin(); f != factor_updates.end(); ++f){
-            int fac = *f;
-
-            // Update states associated to factor
-            state_updates = local_rates[fac].get_state_update();
-            for(arma::uvec::iterator st = state_updates.begin(); st != state_updates.end(); ++st){
-              int state = *st;
-              x(state) += (t - theta_times(state))*theta(state);
-              theta_times(state) = t;
-            }
-          }
           // Update Times
           for (arma::uvec::iterator f = factor_updates.begin(); f != factor_updates.end(); ++f){
             int fac = *f;
@@ -163,6 +146,10 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
           nEvent++;
 
         } else {
+          //
+          clock_old(mini) = t+tau_val;
+          local_rates[mini].refresh(s_eval, clock_old(mini));
+          //
           local_rates[mini].sim_time();
           clock_taus(mini) = clock_old(mini) + local_rates[mini].get_tau();
 
@@ -171,6 +158,8 @@ List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& lo
           nShadow++;
         }
       }
+    } else{
+      // If generated event is invalid - only occurs for local structure
     }
 
     current_time = timer.toc();

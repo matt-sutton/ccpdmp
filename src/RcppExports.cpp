@@ -36,6 +36,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// hmc
+List hmc(double maxTime, SEXP post_f, SEXP grad_f, const List& Data, const arma::vec& y, arma::vec x0, double epsilon, double stoch_time, int nmax, int burn, int thin);
+RcppExport SEXP _ccpdmp_hmc(SEXP maxTimeSEXP, SEXP post_fSEXP, SEXP grad_fSEXP, SEXP DataSEXP, SEXP ySEXP, SEXP x0SEXP, SEXP epsilonSEXP, SEXP stoch_timeSEXP, SEXP nmaxSEXP, SEXP burnSEXP, SEXP thinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type maxTime(maxTimeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type post_f(post_fSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type grad_f(grad_fSEXP);
+    Rcpp::traits::input_parameter< const List& >::type Data(DataSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< double >::type epsilon(epsilonSEXP);
+    Rcpp::traits::input_parameter< double >::type stoch_time(stoch_timeSEXP);
+    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    rcpp_result_gen = Rcpp::wrap(hmc(maxTime, post_f, grad_f, Data, y, x0, epsilon, stoch_time, nmax, burn, thin));
+    return rcpp_result_gen;
+END_RCPP
+}
 // linear_inv_t
 arma::vec linear_inv_t(double a, double b, double u, double tmax);
 RcppExport SEXP _ccpdmp_linear_inv_t(SEXP aSEXP, SEXP bSEXP, SEXP uSEXP, SEXP tmaxSEXP) {
@@ -63,9 +84,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mala_pnt
+List mala_pnt(double maxTime, SEXP post_f, SEXP grad_f, const List& Data, const arma::vec& y, arma::vec x0, double epsilon, int nmax, int burn, int thin);
+RcppExport SEXP _ccpdmp_mala_pnt(SEXP maxTimeSEXP, SEXP post_fSEXP, SEXP grad_fSEXP, SEXP DataSEXP, SEXP ySEXP, SEXP x0SEXP, SEXP epsilonSEXP, SEXP nmaxSEXP, SEXP burnSEXP, SEXP thinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type maxTime(maxTimeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type post_f(post_fSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type grad_f(grad_fSEXP);
+    Rcpp::traits::input_parameter< const List& >::type Data(DataSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< double >::type epsilon(epsilonSEXP);
+    Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    rcpp_result_gen = Rcpp::wrap(mala_pnt(maxTime, post_f, grad_f, Data, y, x0, epsilon, nmax, burn, thin));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_rates
-List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order, int n_points);
-RcppExport SEXP _ccpdmp_sim_rates(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP poly_orderSEXP, SEXP n_pointsSEXP) {
+List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order, int n_points, double u);
+RcppExport SEXP _ccpdmp_sim_rates(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP poly_orderSEXP, SEXP n_pointsSEXP, SEXP uSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -73,7 +114,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type eval_rates(eval_ratesSEXP);
     Rcpp::traits::input_parameter< int >::type poly_order(poly_orderSEXP);
     Rcpp::traits::input_parameter< int >::type n_points(n_pointsSEXP);
-    rcpp_result_gen = Rcpp::wrap(sim_rates(eval_times, eval_rates, poly_order, n_points));
+    Rcpp::traits::input_parameter< double >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_rates(eval_times, eval_rates, poly_order, n_points, u));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -91,14 +133,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // zigzag_cpp
-List zigzag_cpp(double maxTime, SEXP rate_f, const List& factors, const List& local_updates, const List& Data, const arma::vec y, arma::vec x0, arma::vec theta0, arma::uvec trac_coords, double tmax, int poly_order, int nmax, int burn);
-RcppExport SEXP _ccpdmp_zigzag_cpp(SEXP maxTimeSEXP, SEXP rate_fSEXP, SEXP factorsSEXP, SEXP local_updatesSEXP, SEXP DataSEXP, SEXP ySEXP, SEXP x0SEXP, SEXP theta0SEXP, SEXP trac_coordsSEXP, SEXP tmaxSEXP, SEXP poly_orderSEXP, SEXP nmaxSEXP, SEXP burnSEXP) {
+List zigzag_cpp(double maxTime, SEXP rate_f, const List& local_updates, const List& Data, const arma::vec y, arma::vec x0, arma::vec theta0, arma::uvec trac_coords, double tmax, int poly_order, int nmax, int burn);
+RcppExport SEXP _ccpdmp_zigzag_cpp(SEXP maxTimeSEXP, SEXP rate_fSEXP, SEXP local_updatesSEXP, SEXP DataSEXP, SEXP ySEXP, SEXP x0SEXP, SEXP theta0SEXP, SEXP trac_coordsSEXP, SEXP tmaxSEXP, SEXP poly_orderSEXP, SEXP nmaxSEXP, SEXP burnSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type maxTime(maxTimeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type rate_f(rate_fSEXP);
-    Rcpp::traits::input_parameter< const List& >::type factors(factorsSEXP);
     Rcpp::traits::input_parameter< const List& >::type local_updates(local_updatesSEXP);
     Rcpp::traits::input_parameter< const List& >::type Data(DataSEXP);
     Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
@@ -109,18 +150,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type poly_order(poly_orderSEXP);
     Rcpp::traits::input_parameter< int >::type nmax(nmaxSEXP);
     Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    rcpp_result_gen = Rcpp::wrap(zigzag_cpp(maxTime, rate_f, factors, local_updates, Data, y, x0, theta0, trac_coords, tmax, poly_order, nmax, burn));
+    rcpp_result_gen = Rcpp::wrap(zigzag_cpp(maxTime, rate_f, local_updates, Data, y, x0, theta0, trac_coords, tmax, poly_order, nmax, burn));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_ccpdmp_bps", (DL_FUNC) &_ccpdmp_bps, 15},
+    {"_ccpdmp_hmc", (DL_FUNC) &_ccpdmp_hmc, 11},
     {"_ccpdmp_linear_inv_t", (DL_FUNC) &_ccpdmp_linear_inv_t, 4},
     {"_ccpdmp_exp_inv_t", (DL_FUNC) &_ccpdmp_exp_inv_t, 3},
-    {"_ccpdmp_sim_rates", (DL_FUNC) &_ccpdmp_sim_rates, 4},
+    {"_ccpdmp_mala_pnt", (DL_FUNC) &_ccpdmp_mala_pnt, 10},
+    {"_ccpdmp_sim_rates", (DL_FUNC) &_ccpdmp_sim_rates, 5},
     {"_ccpdmp_sim_rate_poly", (DL_FUNC) &_ccpdmp_sim_rate_poly, 3},
-    {"_ccpdmp_zigzag_cpp", (DL_FUNC) &_ccpdmp_zigzag_cpp, 13},
+    {"_ccpdmp_zigzag_cpp", (DL_FUNC) &_ccpdmp_zigzag_cpp, 12},
     {NULL, NULL, 0}
 };
 

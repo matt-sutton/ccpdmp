@@ -1,5 +1,5 @@
-#ifndef BPS_H
-#define BPS_H
+#ifndef BPS_CPP_H
+#define BPS_CPP_H
 #include <queue>
 
 #include "types.h"
@@ -10,7 +10,7 @@
 #include "rate.h"
 
 // [[Rcpp::export]]
-List bps(double maxTime, SEXP rate_f, const List& factors, const List& local_updates,
+List bps_cpp(double maxTime, SEXP rate_f, const List& factors, const List& local_updates,
          const List& Data, const arma::vec y, arma::vec x0, arma::vec theta0,
          arma::uvec trac_coords, double tmax = 1.0, int poly_order = 0,
          int nmax = 10^6, int burn = -1, double ref_rate = 0.1, bool sphere = false){

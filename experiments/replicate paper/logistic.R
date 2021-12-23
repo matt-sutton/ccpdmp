@@ -1,6 +1,7 @@
 ## Example Code for logistic regression
 ## More exotic GLMs can be implemented with different phi and f
 ##
+
 generate.logistic.data <- function(beta, n.obs, siginv) {
   p <- length(beta)
   dataX <- mvtnorm::rmvnorm(n=n.obs*p,sigma = solve(siginv))

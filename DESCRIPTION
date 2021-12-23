@@ -2,10 +2,10 @@ Package: ccpdmp
 Type: Package
 Title: Concave Convex PDMP sampling
 Version: 0.1.0
-Author: Matt Sutton and Jake Bradford
-Maintainer: Matt Sutton <matt.sutton.stat@gmail.com>
+Author: ??
+Maintainer: ??
 Description: Temporary package development
-License: What license is it under?
+License: GPL (>= 2.0)
 Encoding: UTF-8
 LazyData: true
 Imports: Rcpp (>= 1.0.4.6)

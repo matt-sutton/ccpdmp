@@ -4,7 +4,7 @@ using namespace Rcpp;
 #include "piecewise.h"
 #include "poly.h"
 #include "zigzag_cpp.h"
-#include "bps.h"
+#include "bps_cpp.h"
 #include "hmc.h"
 #include "mala.h"
 
@@ -83,6 +83,7 @@ List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order ){
   arma::vec poly_rate(3);
 
   while(tausim(1) > 0.0){
+    Rcout << niter;
     tausim = f_pw.simt(tausim);
     if(tausim(0) > eval_times.max()-1e9){
       break;

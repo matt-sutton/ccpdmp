@@ -1,5 +1,4 @@
 library(RcppXPtrUtils)
-
 grad_cpp <- cppXPtr("arma::vec get_grad(arma::vec x, const List& Data, const arma::vec& y) {
                      const double rho = Data[0];
                      int d = x.size();
@@ -86,7 +85,7 @@ local_rate <- cppXPtr("arma::vec get_rate(double t, arma::vec& t_old, arma::vec&
 
 precision_banded = function(N, rho, band_length = 1, sparse=T){
   if(length(rho) < band_length+1) rho <- rep(-rho, band_length+1)
-  diags <- lapply(0:band_length, function(i) rep(-rho[1+i], N))
+  diags <- lapply(0:band_length, function(i) rep(rho[1+i], N))
   cholV <- Matrix::bandSparse(N, k = c(0:band_length),
                               diagonals = diags, giveCsparse = T)
   diag(cholV) <- 1
@@ -99,7 +98,7 @@ library(Matrix)
 library(coda)
 set.seed(0)
 d_vals <- c(2^c(15:11))
-rho <- -0.5
+rho <- 0.5
 d <- max(d_vals)
 V <- precision_banded(d, rho = rho, band_length = 1)
 V[1,1] <- V[2,2]
@@ -109,11 +108,10 @@ xs <- as.matrix(solve(chol(Vs), rnorm(d)))
 y <- rpois(d, lambda = as.numeric(exp(xs)))
 nmax <- 10^5
 x0 <- xs
-ref_rate <- 0.05
 Datann <- list(rho=rho)
 
 
-nrep <- 40
+nrep <- 50
 nit_hml <- time_hml <- ESS_hml <- matrix(0, nrow = nrep, ncol = length(d_vals))
 nit_ml <- time_ml <- ESS_ml <- matrix(0, nrow = nrep, ncol = length(d_vals))
 nit_zz <- time_zz <- ESS_zz <- matrix(0, nrow = nrep, ncol = length(d_vals))
@@ -153,11 +151,12 @@ h_vals <- rep(0,length(d_vals))
 # print(r2$acc)
 # print(r2$args$epsilon*d^(1/4))
 
-ref_rate <- 1
-lmala <- 0.4 #(maybe round to .45)
-lhmc <- 0.97
-tmax <- 15
-d_index <- 4
+
+# Parameters found from commented section above
+ref_rate <- 0.5
+lmala <- 0.4
+lhmc <- 0.98
+tmax <- 90
 library(ccpdmp)
 
 for(d_index in 1:length(d_vals)){
@@ -189,9 +188,9 @@ for(d_index in 1:length(d_vals)){
 
     ## HMC
     timinghml <- system.time({set.seed(r);hml <- hmc(maxTime = tmax, post_f = post_cpp,grad_f = grad_cpp,
-                                                          Data = Datann,y = y[1:d],
-                                                          nmax = floor(1e3*nmax/d), epsilon = lhmc*d^(-1/4),
-                                                          x0 = x0[1:d], burn = 1)})
+                                                     Data = Datann,y = y[1:d],
+                                                     nmax = floor(1e3*nmax/d), epsilon = lhmc*d^(-1/4),
+                                                     x0 = x0[1:d], burn = 1)})
     time_hml[r,d_index] <- hml$Etime
     print("hmc")
     print(time_hml[r,d_index])
@@ -200,9 +199,8 @@ for(d_index in 1:length(d_vals)){
     ESS_hml[r,d_index] <- effectiveSize(hml$samples[1,])
     nit_hml[r,d_index] <- length(hml$acc_probs)
     print(ESS_hml[r,d_index])
-
+    nplot <- length(hml$acc_probs)
     if(!plot_it){
-      nplot <- nit_hml[r,d_index]
       rm(hml)
       gc()
     }
@@ -226,10 +224,10 @@ for(d_index in 1:length(d_vals)){
 
     if(plot_it){
       plot_pdmp(zz, coords = c(1,2,3), inds = 1:2,
-                nsamples = 2*nplot, pch = '.', mcmc_samples = t(hml$samples[c(1,2,d),1:nplot]))
+                nsamples = nplot, pch = '.', mcmc_samples = t(hml$samples[c(1,2,d),1:nplot]))
       title(paste("d=",d, "ZZ"))
     }
-    rm(zz); rm(samp_zsk)
+    rm(zz); rm(samp_zz)
     gc()
 
     ## BPS (global) factors = 1
@@ -251,9 +249,8 @@ for(d_index in 1:length(d_vals)){
     ESS_bps[r,d_index] <- effectiveSize(samp_bps$xx[1,])
     print(ESS_bps[r,d_index])
     if(plot_it){
-      nplot <- 5e3
       plot_pdmp(bps_1, coords = c(1,2,3), inds = 1:2,
-                nsamples = 2*nplot, pch = '.', mcmc_samples = t(hml$samples[c(1,2,d),1:nplot]))
+                nsamples = nplot, pch = '.', mcmc_samples = t(hml$samples[c(1,2,d),1:nplot]))
       title(paste("d=",d, "BPS"))
     }
     rm(bps_1); rm(samp_bps)
@@ -320,12 +317,12 @@ for(d_index in 1:length(d_vals)){
     rate_updates <- lapply(0:(d/16-1), function(i) c(max(0, i-1):min((d/16-1),i+1)))
     ref_rate_local <- ref_rate*(16-1)/(d-1)
     timing_bfl <- system.time({set.seed(1);bps_16 <- bps(maxTime = tmax,
-                                                        trac_coords = c(0,1,d-1),
-                                                        factors = factors,
-                                                        local_updates = rate_updates,
-                                                        rate_f = local_rate, Data = Datann, y = y[1:d],
-                                                        nmax = d*10^3, tmax = 1,ref_rate = ref_rate_local,
-                                                        x0 = x0[1:d], theta0 = rnorm(d))})
+                                                         trac_coords = c(0,1,d-1),
+                                                         factors = factors,
+                                                         local_updates = rate_updates,
+                                                         rate_f = local_rate, Data = Datann, y = y[1:d],
+                                                         nmax = d*10^3, tmax = 1,ref_rate = ref_rate_local,
+                                                         x0 = x0[1:d], theta0 = rnorm(d))})
     samp_bps_16 <- gen_samples(bps_16$positions,bps_16$times,nsample = max(10^3,10*nit_hml[r,d_index]))
     time_bps_16[r,d_index] <- bps_16$Etime
     nit_bps_16[r,d_index] <- length(bps_16$times)
@@ -343,8 +340,90 @@ for(d_index in 1:length(d_vals)){
     rm(bps_16); rm(samp_bps_16)
     gc()
 
+    save(time_ml,time_hml,time_zz,time_bps,time_bps_4,time_bps_8,time_bps_16,
+         ESS_ml,ESS_hml,ESS_zz,ESS_bps,ESS_bps_4,ESS_bps_8,ESS_bps_16,
+         nit_ml,nit_hml,nit_zz,nit_bps,nit_bps_4,nit_bps_8,nit_bps_16, file = "MALA_HMC_Comp.Rdata")
     plot_it <- F
   }
 }
 
+inds <- 1:(length(d_vals))
+types <- c("Computational Efficiency", "Statistical Efficiency", "Overall Efficiency")
+text_width <- 1.2
+par(mfrow = c(1,3),cex.main=text_width, cex.lab=text_width, cex.axis=text_width, lwd = text_width, mar = c(4,4,2,1.2))
+tv <- 1
+for ( tv in 1:3 ){
+  type <- types[tv]
+  if(type == "Overall Efficiency"){
+    # ESS per Sec
+    calc_ml <- ESS_ml/time_ml
+    calc_hml <- ESS_hml/time_hml
+    calc_zz <- ESS_zz/time_zz
+    calc_zl <- ESS_bps_4/time_bps_4
+    calc_zml <- ESS_bps_8/time_bps_8
+    calc_zeml <- ESS_bps_16/time_bps_16
+    calc_zb <- ESS_bps/time_bps
 
+  } else if(type == "Computational Efficiency"){
+    # Iteration per Sec
+    calc_hml <- nit_hml/time_hml
+    calc_ml <- nit_ml/time_ml
+    calc_zz <- nit_zz/time_zz
+    calc_zl <- nit_bps_4/time_bps_4
+    calc_zml <- nit_bps_8/time_bps_8
+    calc_zeml <- nit_bps_16/time_bps_16
+    calc_zb <- nit_bps/time_bps
+  } else if(type == "Statistical Efficiency"){
+    #  ESS per iteration
+    calc_ml <- ESS_ml/nit_ml
+    calc_hml <- ESS_hml/nit_hml
+    calc_zz <- ESS_zz/nit_zz
+    calc_zl <- ESS_bps_4/nit_bps_4
+    calc_zml <- ESS_bps_8/nit_bps_8
+    calc_zeml <- ESS_bps_16/nit_bps_16
+    calc_zb <- ESS_bps/nit_bps
+  }
+
+  calcs <- c(calc_hml,calc_ml,calc_zb,calc_zz,calc_zl,calc_zml,calc_zeml )
+  ylim <- range(log2(calcs)[log2(calcs) <10^5], na.rm = T)
+
+  calc_mat <- rbind(colMeans(calc_hml),
+                    colMeans(calc_ml),
+                    colMeans(calc_zb),
+                    colMeans(calc_zz),
+                    colMeans(calc_zl),
+                    colMeans(calc_zml),
+                    colMeans(calc_zeml))
+  sds_mat <- rbind(apply(calc_hml, 2, sd),
+                   apply(calc_ml, 2, sd),
+                   apply(calc_zb, 2, sd),
+                   apply(calc_zz, 2, sd),
+                   apply(calc_zl, 2, sd),
+                   apply(calc_zml, 2, sd),
+                   apply(calc_zeml, 2, sd))
+  methods <- c("hmc","mala","bps","zigzag","local (4)","local (8)","local (16)")
+
+  require("Hmisc")
+  #par(mfrow = c(1,1))
+  leg_label <- NULL
+  print(paste("type: ", type))
+  for( m in 1:length(methods)){
+    errbar(log2(d_vals[inds]), log(calc_mat[m,inds],2), log(calc_mat[m,inds]+sds_mat[m,inds],2),
+           log(calc_mat[m,inds]-sds_mat[m,inds],2), add = (m > 1),ylim = round(ylim,2), col = m, errbar.col = m,
+           pch=20, cap=.015, ann = FALSE, ylab = type, sub = "???")
+    X <- matrix(NaN,nrow=length(inds),ncol=2)
+    X[,1] <- rep(1,length(inds))
+    X[,2] <- log2(d_vals[inds])
+    y <- log(calc_mat[m,],2)
+
+    beta_method <- solve(t(X)%*%X)%*%t(X)%*%y
+    abline(a = beta_method[1], b = beta_method[2], col = m, lwd = 1.5)
+    leg_label <- c(leg_label, paste0(methods[m],": ", round(beta_method[1],2), ' ', round(beta_method[2],2), 'd'))
+    print(paste0(methods[m],": ", round(beta_method[1],2), ' ', round(beta_method[2],2), 't'))
+  }
+
+  df <- data.frame(calc_mat)
+
+  title(type, xlab = 'Dimension log 2', ylab = type)
+  legend('bottomleft', leg_label, col = 1:m, lwd = 1)
+}

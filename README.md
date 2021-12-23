@@ -5,113 +5,41 @@ Concave-convex PDMP
 
 This package implements the concave-convex PDMP algorithm to facilitate
 sampling from distributions of interest (particularly Bayesian
-distributions). I’ve put together some basic introduction below and
-there are additional examples in the experiments folder. I’d recommend
-you go through the steps below before diving into the experiments - I
-haven’t written them up very well yet.
+distributions).
 
-## Install
+These samplers move a particle with a state and velocity using
+deterministic dynamics. At random event times the velocity is updated
+and then the particle continues. The trajectories returned by the
+sampler define a Markov process sampling the distribution of interest.
 
-First clone the repo locally. Install R and Rstudio. If you click the
-ccpdmp.Rproj it should open up Rstudio in a project. Before installing
-this package you may need to run the following to get some required
-packages:
+## Install instructions
 
-``` r
-install.packages("Rcpp")
-install.packages("RcppArmadillo")
-```
-
-To compile and run this package press control shift B. After that, you
-should be able to run the code below.
+Click on the .Rproj file and compile the package. Code is provided in
+the experiments section to reproduce the figures and tables of the
+results section from the paper.
 
 ## Getting started
 
-It’s simplest to get started with a few examples where the probability
-distribution of interest has a particularly nice “smooth” form. To get
-sampling a distribution you need the following:
+The cc-pdmp package allows for simulation of interesting Bayesian
+posteriors when the PDMP rate function can be bounded by a
+concave-convex decomposition. We assume linear dynamics for the PDMP
+sampler. The simplest way to start using the package is when the PDMP
+rate function can be bounded by a polynomial function. If this is the
+case then the concave-convex PDMP approach will be able to simulate
+using the concave-convex polynomial decomposition from Proposition 1 of
+the paper.
 
-1.  A probability distribution *π*(*x*) of interest i.e. a posterior
-    (Something from Stan, etc…)
-2.  A function that returns the derivatives
-     − ∂<sub>*i*</sub>log *π*(*x*) (also avaialable from Stan)
-3.  A condition on the smoothness (don’t worry about it :P)
+## Simulating when the PDMP rate is a polynomial
 
-To sample a distribution these are the main requirements. In the
-sections below I give a two simple examples and then an example that
-uses STAN to get the derivative (step 2).
+Consider the Banana distribution,
 
-### A quick example of the method
+*π*(*x*<sub>1</sub>,*x*<sub>2</sub>) ∝ exp (−(*x*<sub>1</sub>−1)<sup>2</sup>+*κ*(*x*<sub>2</sub>−*x*<sub>1</sub><sup>2</sup>)<sup>2</sup>)
 
-We are interested in sampling a density:
-
-*π*(*x*) ∝ exp (−0.5*x*<sup>2</sup>)
-
-i.e the normal distribution with mean zero and variance 1. We need a
-function which returns the derivatives of negative log target:
-
- − ∂log *π*(*x*) = *x*
-
-To use the package you provide a number of iterations for the algorithm
-(max_event), a function e.g. example_dnlogpi which returns the
-derivative of the negative log density, an initial point x0, and a
-smoothness constraint which is the poly order. So to sample a univariate
-(only 1 random variable) normal you could use the code below:
+Taking the derivatives of the negative log gives the function shown
+below:
 
 ``` r
 library(ccpdmp)
-example_dnlogpi <- function(x, partial){
-  return(x)
-}
-zigzag_fit <- zigzag(max_events = 1e3, example_dnlogpi, x0 = c(0), poly_order = 1)
-samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = zigzag_fit$times)
-plot(density(samples$xx), col = 1, main = "Density plot for Zig Zag (black) and R's default normal sampler (red)")
-
-samples_from_r <- rnorm(1e4) # Get 10000 samples from R's basic normal distribution sampler
-lines(density(samples_from_r), col = 2)
-```
-
-![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
-
-When sampling a multivariate density you need a function that will
-return the partial derivatives of the negative log likelihood. The
-partial derivatives are the derivatives with respect to each element of
-the random variable
-*x* = (*x*<sub>1</sub>,*x*<sub>2</sub>,...,*x*<sub>*p*</sub>). To sample
-from a multivatiate normal:
-
-*π*(*x*<sub>1</sub>,*x*<sub>2</sub>) ∝ exp (−0.5*x*<sub>1</sub><sup>2</sup>−0.5*x*<sub>2</sub><sup>2</sup>)
-
-the partials are  − ∂<sub>1</sub>log *π*(*x*) = *x*<sub>1</sub> and
- − ∂<sub>2</sub>log *π*(*x*) = *x*<sub>2</sub>. Running the sampler with
-this partial derivative function gives the following:
-
-``` r
-example_dnlogpi <- function(x, partial){
-  return(x[partial])
-}
-z <- zigzag(1e3, example_dnlogpi, x0 = c(0,0), poly_order = 1)
-plot_pdmp(z, nsamples = 1e3)
-```
-
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
-
-This plot show’s a bit more of what the sampler is doing. The Zig-Zag
-process returns a bunch of line segments where the sampler has visited,
-the red dots are samples harvested along these lines. Once the Zig-Zag
-has been run we can use the line segments to generate samples either
-using the function gen_samples (which you can see in the univatiate
-example) or visually using the plotting function. These samples give an
-approximation of the distribution of interest.
-
-We can also consider a more interesting function to look at. The
-distribution below is called the banana distribution:
-
-*π*(*x*<sub>1</sub>,*x*<sub>2</sub>) ∝ exp ( − (*x*<sub>1</sub>−1)<sup>2</sup> + *κ*(*x*<sub>2</sub>−*x*<sub>1</sub><sup>2</sup>)<sup>2</sup>
-
-Taking the derivatives gives the function shown below:
-
-``` r
 kappa <- 1 ## Arbitrary choice
 
 dnlogpi <- function(x, index){
@@ -120,123 +48,241 @@ dnlogpi <- function(x, index){
             2*kappa*(x2-x1^2))                ## partial x_2
   return(grad[index])
 }
-## Higher smoothness constraint poly = 3
-z <- zigzag(5e3, dnlogpi, x0 = c(0,0), poly_order = 3) 
-## inds shows how much of the ZigZag trajectory to plot and pch is for plotting smaller circles
-plot_pdmp(z,inds = 1:5e3, nsamples = 5e3, pch = '.')   
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+the rate function for the PDMP will depend on the terms
 
-## Pulling something from stan
+*f*<sub>1</sub>(*t*) =  − *v*<sub>1</sub>∂<sub>1</sub>log *π*(*x*+*t*) = *v*<sub>1</sub>(2((*x*<sub>1</sub>+*t**v*<sub>1</sub>)−1)+4*κ*((*x*<sub>1</sub>+*t**v*<sub>1</sub>)<sup>2</sup>−(*x*<sub>2</sub>+*t**v*<sub>2</sub>))(*x*<sub>1</sub>+*t**v*<sub>1</sub>))
 
-Working our derivatives is time consuming and a bit of a deterrent to
-using the sampler. Fortunatley we can use Stan to work out derivatives
-automatically. A very quick example from stan could be given as:
+*f*<sub>2</sub>(*t*) =  − *v*<sub>2</sub>∂<sub>2</sub>log *π*(*x*+*t*) = *v*<sub>2</sub>(2*κ*((*x*<sub>2</sub>+*t**v*<sub>2</sub>)−(*x*<sub>1</sub>+*t**v*<sub>1</sub>)<sup>2</sup>)
+
+So, *f*<sub>1</sub> is a polynomial of order 3 and *f*<sub>2</sub> is a
+polynomial of order 2. Rather than finding these terms exactly the
+ccpdmp package can evaluate these polynomials at 4 points
+*t* ∈ \[0, *τ*<sub>max</sub>) and interpolate to find the coefficients.
+The user just needs to specify a maximum polynomial order.
 
 ``` r
-library(rstan)
-stanmodelcode <- "
-data {
-  int<lower=0> N;
-  real y[N];
-} 
-
-parameters {
-  real mu;
-} 
-
-model {
-  target += normal_lpdf(mu | 0, 10);
-  target += normal_lpdf(y  | mu, 1);
-} 
-"
-
-y <- rnorm(20) 
-dat <- list(N = 20, y = y); 
-
-## Running Stan to fit the model 
-fit <- stan(model_code = stanmodelcode, model_name = "example", warmup = 100,
-            data = dat, iter = 5000, chains = 1, verbose = FALSE) 
+set.seed(0)
+z <- zigzag(1e3, dnlogpi, x0 = c(0,0), poly_order = 3) 
+b <- bps(1e3, dnlogpi, x0 = c(0,0), poly_order = 3) 
+plot_pdmp_multiple(list(zigzag=z, bps=b), nsamples = 1e3)
 ```
 
-    ## 
-    ## SAMPLING FOR MODEL 'example' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: WARNING: There aren't enough warmup iterations to fit the
-    ## Chain 1:          three stages of adaptation as currently configured.
-    ## Chain 1:          Reducing each adaptation stage to 15%/75%/10% of
-    ## Chain 1:          the given number of warmup iterations:
-    ## Chain 1:            init_buffer = 15
-    ## Chain 1:            adapt_window = 75
-    ## Chain 1:            term_buffer = 10
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 5000 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  101 / 5000 [  2%]  (Sampling)
-    ## Chain 1: Iteration:  600 / 5000 [ 12%]  (Sampling)
-    ## Chain 1: Iteration: 1100 / 5000 [ 22%]  (Sampling)
-    ## Chain 1: Iteration: 1600 / 5000 [ 32%]  (Sampling)
-    ## Chain 1: Iteration: 2100 / 5000 [ 42%]  (Sampling)
-    ## Chain 1: Iteration: 2600 / 5000 [ 52%]  (Sampling)
-    ## Chain 1: Iteration: 3100 / 5000 [ 62%]  (Sampling)
-    ## Chain 1: Iteration: 3600 / 5000 [ 72%]  (Sampling)
-    ## Chain 1: Iteration: 4100 / 5000 [ 82%]  (Sampling)
-    ## Chain 1: Iteration: 4600 / 5000 [ 92%]  (Sampling)
-    ## Chain 1: Iteration: 5000 / 5000 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.001 seconds (Warm-up)
-    ## Chain 1:                0.044 seconds (Sampling)
-    ## Chain 1:                0.045 seconds (Total)
-    ## Chain 1:
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+Both the Zig-Zag and BPS can be simulated using the same specification.
+
+## Simulating when the PDMP rate is bounded by a polynomial
+
+In most situations the PDMP rate will not be exactly polynomial but can
+be bounded by a polynomial. Consider logistic regression where the
+gradient function is
 
 ``` r
-print(fit)
-```
+# Return the partial derivative for a logistic regression 
+get_grad <- function(x, index){
+  expa <- exp(X%*%x)
+  phi_1 <- expa/(1+expa) - y
 
-    ## Inference for Stan model: example.
-    ## 1 chains, each with iter=5000; warmup=100; thin=1; 
-    ## post-warmup draws per chain=4900, total post-warmup draws=4900.
-    ## 
-    ##        mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff Rhat
-    ## mu    -0.03    0.01 0.22  -0.47  -0.17  -0.02   0.13   0.40  1585    1
-    ## lp__ -32.26    0.01 0.69 -34.23 -32.42 -31.99 -31.82 -31.77  2618    1
-    ## 
-    ## Samples were drawn using NUTS(diag_e) at Thu Dec 09 14:19:32 2021.
-    ## For each parameter, n_eff is a crude measure of effective sample size,
-    ## and Rhat is the potential scale reduction factor on split chains (at 
-    ## convergence, Rhat=1).
-
-``` r
-## Extract Stan samples
-stan_samples <- extract(fit, 'mu')
-```
-
-This model has a single parameter *μ*, the gradient of the log posterior
-can be returned using the function \`grad_log_prob’ from Stan. This
-means we can put it in our sampler. One thing to be careful about is
-that the stan function returns the gradient of the log posterior and we
-want the NEGATIVE of this.
-
-``` r
-dnlogpi <- function(x, partial){
-  grad <- -1 * grad_log_prob(fit, x) ## return the gradient of the negative log posterior
-  return(grad[partial])
+  grad <- rep(0, length(index))
+  for(i in 1:length(index)){
+    grad[i] <- sum(phi_1*X[,index[i]])
+  }
+  return(grad)
 }
-system.time(zigzag_fit <- zigzag(1e3, dnlogpi, x0 = c(0), poly_order = 1)) ## Using 1/5 the number of iterations.
+```
+
+Following the notation from the paper this can be simulated using the
+bound
+*f*(*t*) ≤ *f*(0) + *f*′(0)*t* + *f*″(0)/2 + *M**τ*<sub>max</sub><sup>3</sup>/6
+where *f*‴(*t*) ≤ \|*M*\|. The paper gives an explicit form for this
+here we show how this polynomial may be used in simulating the logistic
+regression example. In addition to supplying the gradient function the
+user must also specify a function that evaluates the polynomial
+upper-bounding rate.
+
+``` r
+## Return the rates for an upper-bounding 3rd order polynomial
+return_rates <- function(x, theta, tau_grid, dnlogpi, rate_updates){
+
+  tau_length <- length(tau_grid);
+  n_rates <- length(rate_updates)
+
+  rates_eval <- matrix(0, n_rates, tau_length)
+  a <- X%*%x
+  expa <- exp(a)
+  da_dt <- X%*%theta
+
+  # First 3 derivatives of phi(a) = log(1+exp(a)) - ya
+  phi_1 <- expa/(1+expa) - y
+  phi_2 <- expa/(1+expa)^2
+  phi_3 <- -expa*(expa -1)/(expa+1)^3
+  phi_4_bound <- 1/8
+
+  for(i in 1:n_rates){
+    ## Calculate f(t) and derivatives of f(t) for Taylor expansion
+    partial_i <- rate_updates[i]
+    f <- theta[partial_i]*sum(phi_1*X[,partial_i]) 
+    f_1 <- theta[partial_i]*sum(phi_2*X[,partial_i]*da_dt)
+    f_2 <- theta[partial_i]*sum(phi_3*X[,partial_i]*da_dt^2)
+    f_3 <- sum(phi_4_bound*abs(X[,partial_i]*da_dt^3))
+
+    # Evaluate f(t) < f(t) + f'(t) + f''(t)/2 + M/6 at all tau_grid points
+    poly <- c(f_3/factorial(3), f_2/factorial(2), f_1, f)
+
+    rates_eval[i,] <- pracma::polyval(poly, tau_grid)
+  }
+  return(rates_eval)
+}
+```
+
+Example run:
+
+``` r
+generate.logistic.data <- function(beta, n.obs, siginv) {
+  p <- length(beta)
+  dataX <- mvtnorm::rmvnorm(n=n.obs*p,sigma = solve(siginv))
+  vals <- dataX%*%beta
+  generateY <- function(p) { rbinom(1, 1, p)}
+  dataY <- sapply(1/(1 + exp(-vals)), generateY)
+  return(list(dataX = dataX, dataY = dataY))
+}
+set.seed(1)
+n_ev <- 1e3; p <- 3; n <- 100
+beta <- c(c(-1.25, 0.5), rep(-0.4,p-2))
+siginv <- diag(1, p,p)
+siginv[1,2] <- siginv[2,1] <- 0.8
+data <- generate.logistic.data(beta, n, siginv)
+X <- data$dataX
+y <- data$dataY
+
+z <- zigzag(5e3, dnlogpi = get_grad, return_rates = return_rates,x0 = beta, poly_order = 3) 
+plot_pdmp(z, nsamples = 5e3, inds = 1:5e3)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+## Local methods and efficient C++ implementations
+
+More efficient versions of the samplers are also available though they
+require specifying the concave-convex decomposition using a C++
+implementation. The code below defines a cpp function which takes in the
+current position and velocity (x, theta) data y and any additional data
+from a list and returns a matrix with concave convex decomposition. In
+this case the distribution is a Gaussian.
+
+``` r
+library(RcppXPtrUtils)
+```
+
+    ## Warning: package 'RcppXPtrUtils' was built under R version 4.0.5
+
+``` r
+local_rate <- cppXPtr("arma::vec get_rate(double t, arma::vec& t_old, arma::vec& x, arma::vec& theta,
+                      const arma::vec& y, const List& Data, arma::uvec rate_inds, bool grad) {
+
+                     // Standard header //
+                     int num_terms = rate_inds.size(), rsize = 5;
+                     double x_t, grd;
+                     if(grad){
+                        rsize += num_terms;
+                     }
+                     arma::vec res = arma::zeros(rsize);
+
+                     // Evaluate the rate: (f_u, f_n, f_n', p, f) for the factor
+                     // Return additional gradient terms if grad = TRUE
+
+                     for(int i = 0; i < num_terms; i++){
+                          int partial = rate_inds(i);
+                          x_t = x(partial) + theta(partial)*(t-t_old(partial));
+                          grd = x_t;
+                          res(0) += theta(partial)*grd;
+
+                          if(grad){
+                          res(5 + i) = grd;
+                          }
+                     }
+                     res(4) = res(0) + res(1) + res(3);
+                     return(res);
+                     }", depends = c("RcppArmadillo"))
+```
+
+Once this has been set up the practitioner may specify a choice of
+Factors wich partition the parameter set and local updates indicating
+which factors need re-simulation once and event for the corresponding
+factor is triggered.
+
+``` r
+set.seed(0)
+d <- 1000
+x0<- rnorm(d)
+theta0 <- rnorm(d)
+nmax <- 10^5
+ref_rate <- 0.05
+Datann <- list()
+
+## Standard BPS -- A single factor consisting of all variables
+Factors <- list(c(0:(d-1)))
+Neighbourhoods <- list(c(0)) # just resimulate the Factor 0 (the only factor)
+
+system.time({set.seed(1);bps_global <- bps_cpp(maxTime = 2, # Run time
+                                               trac_coords = c(0,1,d-1), # Coords to track
+                                               rate_f = local_rate, # Cpp function
+                                               factors = Factors, # List of factors
+                                               local_updates = Neighbourhoods, # List of factors to update 
+                                               Data = Datann, # Possible extra parameters
+                                               y = y,         # Possible extra data
+                                               nmax = d*3*10^2, # maximum number of events
+                                               x0 = x0, # initial location
+                                               theta0 = theta0, # initial velocity
+                                               ref_rate = 1)})
 ```
 
     ##    user  system elapsed 
-    ##    0.13    0.03    0.16
+    ##    1.97    0.02    2.02
 
 ``` r
-samples <- gen_samples(nsample = 1e4, positions = zigzag_fit$positions, times = zigzag_fit$times)
-plot(density(samples$xx), col = 1, main = "Density plot for Zig Zag (black) and STAN (red)")
-lines(density(stan_samples$mu), col = 2)
+length(bps_global$times)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+    ## [1] 123270
+
+``` r
+plot_pdmp(bps_global, pch = '.',coords = c(1,2,3), nsamples = 1e3, inds = 1:1e3)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+## local BPS -- 10 factors consisting of d/10 variables each
+Factors <- lapply(0:(d/10-1), function(i) seq(from = 10*i, to = 10*i+9))
+Neighbourhoods <- lapply(0:(d/10-1), function(i) c(i))
+
+system.time({set.seed(1);bps_local <- bps_cpp(maxTime = 2, # Run time
+                                               trac_coords = c(0,1,d-1), # Coords to track
+                                               rate_f = local_rate, # Cpp function
+                                               factors = Factors, # List of factors
+                                               local_updates = Neighbourhoods, # List of factors to update 
+                                               Data = Datann, # Possible extra parameters
+                                               y = y,         # Possible extra data
+                                               nmax = d*3*10^2, # maximum number of events
+                                               x0 = x0, # initial location
+                                               theta0 = theta0, # initial velocity
+                                               ref_rate = 1)})
+```
+
+    ##    user  system elapsed 
+    ##    0.54    0.00    0.55
+
+``` r
+length(bps_local$times)
+```
+
+    ## [1] 300000
+
+``` r
+plot_pdmp(bps_local, pch = '.',coords = c(1,2,3), nsamples = 1e3, inds = 1:1e3)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->

@@ -70,7 +70,6 @@ return_rates <- function(x, theta, tau_grid, dnlogpi, rate_updates){
   return(return_rates_poly(x, theta, tau_grid, dnlogpi, rate_updates, 1))
 }
 
-corrs <- round(log(seq(exp(0), exp(0.95), length.out = 7)),2)#seq(0, 0.95, length.out = 7)
 corrs <- c(0.00, 0.25, 0.5, 0.65, 0.75, 0.85, 0.95)
 
 leff <- list()
@@ -83,7 +82,6 @@ for( reps in 1:20){
     n_ev <- 5*1e3
     p <- 5
     n <- 200
-    sigma2_prior <- 100
     beta <- c(c(-1.25, 0.5), rep(-0.4,p-2))
     siginv <- diag(1, p,p)
     siginv[1,2] <- siginv[2,1] <- corrs[cor_ind]
@@ -95,7 +93,7 @@ for( reps in 1:20){
       return(return_rates_poly(x, theta, tau_grid, dnlogpi, rate_updates, 1))
     }
     set.seed(1);z_1_order <- zigzag(max_events = n_ev,  return_rates = return_rates, dnlogpi = get_grad,
-                                    x0 = beta, tau_max = 1, poly_order = 1)
+                                    x0 = beta, tau_max = 1, poly_order = 1, adapt_tau_max = F)
     eff[1, cor_ind] <- length(z_1_order$times)/max(z_1_order$n_prop)
     efft[1, cor_ind] <- length(z_1_order$times)/max(z_1_order$n_iterations)
 
@@ -140,4 +138,6 @@ for( reps in 1:length(lefft)){
 lmean_efft <- lmean_efft/length(lefft)
 colnames(lmean_efft) <- corrs
 
-# save(lmean_eff, lmean_efft, file = "Logit_poly.RData")
+save(lmean_eff, lmean_efft, file = "../Logit_poly.RData")
+# xtable::xtable(lmean_efft)
+

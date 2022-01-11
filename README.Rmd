@@ -26,8 +26,9 @@ The package documentation is still under development. A quick-start is given bel
 
 You can find documentation on the following:
 
-1. [Simulating a Poisson process using concave-convex thinning](simulating_poisson_process.md)
-2. [Exact simulation examples](exact_thinning.md)
+1. [Simulating a Poisson process using concave-convex thinning](experiments/simulating-poisson-process.md)
+
+2. [Exact simulation examples](experiments/exact-thinning.md)
 
 ## Quickstart
 

@@ -36,8 +36,9 @@ gradients of the log target or explicit concave-convex decomposition.
 You can find documentation on the following:
 
 1.  [Simulating a Poisson process using concave-convex
-    thinning](simulating_poisson_process.md)
-2.  [Exact simulation examples](exact_thinning.md)
+    thinning](experiments/simulating-poisson-process.md)
+
+2.  [Exact simulation examples](experiments/exact-thinning.md)
 
 ## Quickstart
 
@@ -155,8 +156,8 @@ stan_fit <- stan(model_code = stanmodelcode,
     ## 
     ## SAMPLING FOR MODEL '63256f475b2ed8664766ede5c2a9a479' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.001 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 10 seconds.
+    ## Chain 1: Gradient evaluation took 0 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -182,4 +183,4 @@ system.time(z <- zigzag(1e3, dnlogpi, return_rates = return_rates_zigzag,
 ```
 
     ##    user  system elapsed 
-    ##    0.33    0.03    0.36
+    ##    0.34    0.00    0.37

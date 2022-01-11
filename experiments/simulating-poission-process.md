@@ -32,7 +32,7 @@ where *f*<sub>*u*</sub>(*t*) is convex and *f*<sub>*n*</sub>(*t*) is
 concave. Piece-wise linear bounds can be found by combining bounds on
 the convex and concave parts individually.
 
-![](simulating_poission_process_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+![](simulating-poission-process_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 These bounds are constructed based on evaluations of the convex, concave
 functions and evaluation of the derivative of the concave function. The
@@ -55,7 +55,7 @@ plot(t_range, sim_time$upper_range, type = 'l', xlab = 't',col = 'red',
 lines(t_range, f_n(t_range) + f_u(t_range))
 ```
 
-![](simulating_poission_process_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](simulating-poission-process_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 The simulated event time sim_time$t = 1.8296898 from the upper-bound is
 returned along with the value *u* sim_time$u = 0 remaining from the
@@ -91,7 +91,7 @@ plot(t_range, sim_time$upper_range, type = 'l', xlab = 't',col = 'red',
 lines(t_range, f_n(t_range) + f_u(t_range))
 ```
 
-![](simulating_poission_process_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](simulating-poission-process_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ### Simulating a polynomial event rate
 
@@ -125,4 +125,4 @@ lines(t_range, f(t_range))
 abline(v = sim_time$t)
 ```
 
-![](simulating_poission_process_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](simulating-poission-process_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->

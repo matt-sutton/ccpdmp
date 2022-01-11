@@ -89,7 +89,7 @@ z <- zigzag(5e3, dnlogpi = get_grad, return_rates = return_rates,x0 = beta, poly
 plot_pdmp(z, nsamples = 5e3, inds = 1:5e3)
 ```
 
-![](exact_thinning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](exact-thinning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ## Local methods and efficient C++ implementations
 
@@ -170,19 +170,19 @@ system.time({set.seed(1);bps_global <- bps_cpp(maxTime = 2, # Run time
 ```
 
     ##    user  system elapsed 
-    ##       2       0       2
+    ##    2.00    0.02    2.01
 
 ``` r
 length(bps_global$times)
 ```
 
-    ## [1] 116218
+    ## [1] 107328
 
 ``` r
 plot_pdmp(bps_global, pch = '.',coords = c(1,2,3), nsamples = 1e3, inds = 1:1e4)
 ```
 
-![](exact_thinning_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](exact-thinning_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
 ## local BPS -- 10 factors consisting of d/10 variables each
@@ -203,7 +203,7 @@ system.time({set.seed(1);bps_local <- bps_cpp(maxTime = 2, # Run time
 ```
 
     ##    user  system elapsed 
-    ##    0.55    0.00    0.54
+    ##    0.58    0.00    0.57
 
 ``` r
 length(bps_local$times)
@@ -215,4 +215,4 @@ length(bps_local$times)
 plot_pdmp(bps_local, pch = '.',coords = c(1,2,3), nsamples = 1e3, inds = 1:1e4)
 ```
 
-![](exact_thinning_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](exact-thinning_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->

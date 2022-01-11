@@ -111,7 +111,6 @@ public:
       }
       ab_values = get_ab(*it_t0, *it_t1);
 
-      // tu += linear_inv_t(ab_values[0]+exp(log(ab_values[1])+log(tu(0))), ab_values[1], tu(1), ab_values[2] - tu(0));
       tu += linear_inv_t(ab_values[0]+ab_values[1]*tu(0), ab_values[1], tu(1), ab_values[2] - tu(0));
       // Check if time simulated
       if(tu(1) < eps | tu(0) > tmax-eps){

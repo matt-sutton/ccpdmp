@@ -1,6 +1,6 @@
 ## Base Zig-Zag Sampler
 zigzag <- function(max_events, dnlogpi, x0, tau_max = 0.5, poly_order = 2, adapt_tau_max = T,
-                   return_rates = return_rates_zigzag){
+                   return_rates = return_rates_zigzag, add_interp = 0){
 
   t = 0; n_prop <- n_iterations <- 0; n_rates <- length(x0)
   x = x0; theta = rep(1, n_rates)
@@ -11,7 +11,7 @@ zigzag <- function(max_events, dnlogpi, x0, tau_max = 0.5, poly_order = 2, adapt
 
   # Simulate times
   tau_grid <- seq(from = 0, to = tau_max,  length.out = poly_order + 1)
-  rates <- return_rates(x, theta, tau_grid, dnlogpi, 1:n_rates)
+  rates <- return_rates(x, theta, tau_grid, dnlogpi, 1:n_rates) + add_interp
 
   for( i in 1:n_rates){
     event_sim = sim_rate_poly(eval_times = tau_grid, eval_rates = rates[i,], poly_order)
@@ -60,7 +60,7 @@ zigzag <- function(max_events, dnlogpi, x0, tau_max = 0.5, poly_order = 2, adapt
       velocities[,num_evts] <- theta; positions[,num_evts] <- x
       times[num_evts] = t
 
-      rates <- return_rates(x, theta, tau_grid, dnlogpi, 1:n_rates)
+      rates <- return_rates(x, theta, tau_grid, dnlogpi, 1:n_rates) + add_interp
 
       for( i in 1:n_rates){
         event_sim = sim_rate_poly(eval_times = tau_grid, eval_rates = rates[i,], poly_order)
@@ -85,7 +85,7 @@ zigzag <- function(max_events, dnlogpi, x0, tau_max = 0.5, poly_order = 2, adapt
 
       # Re-simulate times for all tau_s less than zero:
       update_rates <- which(tau_s <= 0)
-      rates <- return_rates(x, theta, tau_grid, dnlogpi, update_rates)
+      rates <- return_rates(x, theta, tau_grid, dnlogpi, update_rates) + add_interp
       for( i in 1:length(update_rates)){
         event_sim = sim_rate_poly(eval_times = tau_grid, eval_rates = rates[i,], poly_order)
         j <- update_rates[i]

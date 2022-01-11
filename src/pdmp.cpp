@@ -64,7 +64,49 @@ List sim_rates(arma::vec eval_times, arma::mat eval_rates, int poly_order = 0, i
 }
 
 // [[Rcpp::export]]
-List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order ){
+List cc_sim(arma::vec eval_times, arma::mat eval_rates, int n_points = -1, double u = -1 ){
+
+  piecewise f_pw;
+
+  for(int i = 0; i < eval_times.size(); ++i) {
+    f_pw.push_tf( eval_times(i), eval_rates.col(i).head(3) );
+  }
+
+  arma::vec tausim(2);
+  tausim(0) = 0.0;
+  if(u < 0) {
+    tausim(1) = R::rexp(1);
+  } else {
+    tausim(1) = u;
+  };
+  tausim = f_pw.simt(tausim);
+
+  double upper = 0;
+  if(tausim(1)< 1e-9){
+    upper = f_pw.evalpw(tausim(0));
+  }
+
+  List ret ;
+  ret["t"] = tausim(0) ;
+  ret["u"] = tausim(1) ;
+  ret["f_evall"] = upper;
+
+  // Additional (optional) plotting returns
+  if(n_points > 0){
+    arma::vec range = arma::linspace<arma::vec>(1e-10, eval_times.max()-1e-10, n_points);
+    arma::vec upper_range(n_points);
+    for(int i = 0; i < range.size(); ++i) {
+      upper_range(i) = f_pw.evalpw(range(i));
+    }
+    ret["range"] = range;
+    ret["upper_range"] = upper_range;
+  }
+
+  return(ret) ;
+}
+
+// [[Rcpp::export]]
+List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order, int n_points = -1 ){
 
   piecewise f_pw;
   poly poly_approx;
@@ -83,9 +125,8 @@ List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order ){
   arma::vec poly_rate(3);
 
   while(tausim(1) > 0.0){
-    Rcout << niter;
     tausim = f_pw.simt(tausim);
-    if(tausim(0) > eval_times.max()-1e9){
+    if(tausim(0) > (eval_times.max()-1e-9)){
       break;
     }
     upper = f_pw.evalpw(tausim(0));
@@ -105,6 +146,18 @@ List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order ){
   ret["t"] = tausim(0) ;
   ret["u"] = tausim(1) ;
   ret["f_evall"] = upper;
+
+  // Additional (optional) plotting returns
+  if(n_points > 0){
+    arma::vec range = arma::linspace<arma::vec>(1e-10, eval_times.max()-1e-10, n_points);
+    arma::vec upper_range(n_points);
+    for(int i = 0; i < range.size(); ++i) {
+      upper_range(i) = f_pw.evalpw(range(i));
+    }
+    ret["range"] = range;
+    ret["upper_range"] = upper_range;
+  }
+
   return(ret) ;
 }
 

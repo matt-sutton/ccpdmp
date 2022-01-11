@@ -15,6 +15,7 @@ gen_samples <- function(positions, times, theta=NULL,
   t0 = times[1]
   x0 = positions[,1]
   samples <- matrix(0, nrow = length(x0), ncol = nsample)
+  sample_times <- rep(0, nsample)
   n <- 0
 
   for(i in 2:nsteps){
@@ -30,9 +31,10 @@ gen_samples <- function(positions, times, theta=NULL,
         x_s <- xstar + (x0-xstar)*cos(t-t0)+theta0*sin(t-t0)
       }
       samples[,n] <- x_s
+      sample_times[n] <- t
     }
     x0 = x1; t0 = t1
   }
 
-  return(list(xx = samples))
+  return(list(samples = samples, sample_times =sample_times))
 }

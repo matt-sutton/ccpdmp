@@ -25,8 +25,12 @@ sim_rates <- function(eval_times, eval_rates, poly_order = 0L, n_points = -1L, u
     .Call(`_ccpdmp_sim_rates`, eval_times, eval_rates, poly_order, n_points, u)
 }
 
-sim_rate_poly <- function(eval_times, eval_rates, poly_order) {
-    .Call(`_ccpdmp_sim_rate_poly`, eval_times, eval_rates, poly_order)
+cc_sim <- function(eval_times, eval_rates, n_points = -1L, u = -1) {
+    .Call(`_ccpdmp_cc_sim`, eval_times, eval_rates, n_points, u)
+}
+
+sim_rate_poly <- function(eval_times, eval_rates, poly_order, n_points = -1L) {
+    .Call(`_ccpdmp_sim_rate_poly`, eval_times, eval_rates, poly_order, n_points)
 }
 
 zigzag_cpp <- function(maxTime, rate_f, local_updates, Data, y, x0, theta0, trac_coords, tmax = 1.0, poly_order = 0L, nmax = 10^6L, burn = -1L) {

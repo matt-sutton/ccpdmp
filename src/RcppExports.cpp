@@ -119,16 +119,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cc_sim
+List cc_sim(arma::vec eval_times, arma::mat eval_rates, int n_points, double u);
+RcppExport SEXP _ccpdmp_cc_sim(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP n_pointsSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type eval_times(eval_timesSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type eval_rates(eval_ratesSEXP);
+    Rcpp::traits::input_parameter< int >::type n_points(n_pointsSEXP);
+    Rcpp::traits::input_parameter< double >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(cc_sim(eval_times, eval_rates, n_points, u));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_rate_poly
-List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order);
-RcppExport SEXP _ccpdmp_sim_rate_poly(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP poly_orderSEXP) {
+List sim_rate_poly(arma::vec eval_times, arma::vec eval_rates, int poly_order, int n_points);
+RcppExport SEXP _ccpdmp_sim_rate_poly(SEXP eval_timesSEXP, SEXP eval_ratesSEXP, SEXP poly_orderSEXP, SEXP n_pointsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type eval_times(eval_timesSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type eval_rates(eval_ratesSEXP);
     Rcpp::traits::input_parameter< int >::type poly_order(poly_orderSEXP);
-    rcpp_result_gen = Rcpp::wrap(sim_rate_poly(eval_times, eval_rates, poly_order));
+    Rcpp::traits::input_parameter< int >::type n_points(n_pointsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_rate_poly(eval_times, eval_rates, poly_order, n_points));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -162,7 +177,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_ccpdmp_exp_inv_t", (DL_FUNC) &_ccpdmp_exp_inv_t, 3},
     {"_ccpdmp_mala_pnt", (DL_FUNC) &_ccpdmp_mala_pnt, 10},
     {"_ccpdmp_sim_rates", (DL_FUNC) &_ccpdmp_sim_rates, 5},
-    {"_ccpdmp_sim_rate_poly", (DL_FUNC) &_ccpdmp_sim_rate_poly, 3},
+    {"_ccpdmp_cc_sim", (DL_FUNC) &_ccpdmp_cc_sim, 4},
+    {"_ccpdmp_sim_rate_poly", (DL_FUNC) &_ccpdmp_sim_rate_poly, 4},
     {"_ccpdmp_zigzag_cpp", (DL_FUNC) &_ccpdmp_zigzag_cpp, 12},
     {NULL, NULL, 0}
 };

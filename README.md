@@ -36,9 +36,9 @@ gradients of the log target or explicit concave-convex decomposition.
 You can find documentation on the following:
 
 1.  [Simulating a Poisson process using concave-convex
-    thinning](experiments/simulating-poisson-process.md)
+    thinning](https://github.com/matt-sutton/ccpdmp/blob/main/experiments/simulating-poission-process.md)
 
-2.  [Exact simulation examples](experiments/exact-thinning.md)
+2.  [Exact simulation examples](https://github.com/matt-sutton/ccpdmp/blob/main/experiments/exact-thinning.md)
 
 ## Quickstart
 

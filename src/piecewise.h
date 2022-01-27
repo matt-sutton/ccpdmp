@@ -65,8 +65,8 @@ public:
 
       // time concave gradients intersect
       double t_intersect = (a_n1 - a_n2)/(b_n2 - b_n1);
-      t_intersect = std::min(t_intersect,f1.first); // uperbound ?
-      t_intersect = std::max(t_intersect,f0.first); // lowerbound ?
+      t_intersect = std::min(t_intersect,f1.first);
+      t_intersect = std::max(t_intersect,f0.first);
 
       ab_values(2) = t_intersect;
       ab_values(5) = f1.first;
@@ -78,8 +78,6 @@ public:
   double evalpw(double t_ev) {
     // find interval on t_ev
     std::map< double, arma::vec >::iterator it_t0, it_t1;
-    // it_t0 = fEvaluations.lower_bound(t_ev-1e-10);
-    // it_t1 = std::next(it_t0,1);
     it_t1 = fEvaluations.upper_bound(t_ev);
     it_t0 = std::prev(it_t1,1);
 
@@ -117,7 +115,6 @@ public:
         return(tu);
       }
       if( ab_values[5] -tu(0) > 1e-10 ){
-        // tu += linear_inv_t(ab_values[3]+exp(log(ab_values[4])+log(tu(0))), ab_values[4], tu(1), ab_values[5] - tu(0));
         tu += linear_inv_t(ab_values[3]+ab_values[4]*tu(0), ab_values[4], tu(1), ab_values[5] - tu(0));
         // Check if time simulated
         if(tu(1) < eps | tu(0) > tmax-eps){

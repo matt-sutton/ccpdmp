@@ -82,7 +82,8 @@ List cc_sim(arma::vec eval_times, arma::mat eval_rates, int n_points = -1, doubl
   tausim = f_pw.simt(tausim);
 
   double upper = 0;
-  if(tausim(1)< 1e-9){
+
+  if(abs(tausim(0) - eval_times.max())> 1e-13){
     upper = f_pw.evalpw(tausim(0));
   }
 

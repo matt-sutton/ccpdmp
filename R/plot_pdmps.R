@@ -9,13 +9,18 @@ plot_pdmp <- function(pdmp_res, coords = 1:2, inds = 1:10^3, nsamples = 10^3,
                          nsample = nsamples, burn = burn*length(pdmp_res$times))$samples
   for( i in 1:ndim ){
     for(j in 1:ndim ){
-      if(i == j & nsamples > 0){
-        ds <- density(samples[coords[i],])
-        plot(ds, main='',xlab='', ylab='', col = 'red')
-        if(!is.null(mcmc_samples)){
-          lines(density(mcmc_samples[,coords[i]], bw = ds$bw), col = 'blue')
+      if(i == j ){
+        if(nsamples > 0){
+          ds <- density(samples[coords[i],])
+          plot(ds, main='',xlab='', ylab='', col = 'red')
+          if(!is.null(mcmc_samples)){
+            lines(density(mcmc_samples[,coords[i]], bw = ds$bw), col = 'blue')
+          }
+        }else{
+          plot(x=1, type = "n")
         }
       }
+
       if( i != j ){
         xrange <- range(c(samples[coords[i],], pdmp_res$positions[coords[i],inds]))
         yrange <- range(c(samples[coords[j],], pdmp_res$positions[coords[j],inds]))

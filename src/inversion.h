@@ -8,12 +8,21 @@
 arma::vec linear_inv_t(double a, double b, double u, double tmax) {
   arma::vec res(2);
   res.zeros();
-  double tsim, t_zero;
+  double tsim, t_zero, eps = 1e-13;
 
-  if(std::abs(u) < 1e-14){
+  if(std::abs(u) < eps){
     return(res);
-  }
-  if( a < 0 & b > 0){
+
+  } else if ( a > eps & abs(b) < eps ){
+    tsim = u/a;
+    if(tsim < tmax){
+      res(0) = tsim; res(1) = -u;
+    } else {
+      res(0) = tmax; res(1) = -a*tmax;
+    }
+    return(res);
+
+  } else if( a < eps & b > eps){
     t_zero = -a/b;
 
     if( t_zero > tmax){
@@ -27,9 +36,9 @@ arma::vec linear_inv_t(double a, double b, double u, double tmax) {
       }
     }
     return(res);
-  } else if ( a > 0 & b < 0 ){
+  } else if ( a > eps & b < eps ){
     if(-pow(a,2)/b + pow(-a,2)/(2*b) >= u ){
-      tsim = -a/b -sqrt(pow(a/b,2) + 2*u/b);
+      tsim = -a/b -sqrt(pow(a/b,2) + 2*u/b); // tsim lands in triangle
       if(tsim < tmax){
         res(0) = tsim; res(1) = -u;
       } else {
@@ -37,25 +46,20 @@ arma::vec linear_inv_t(double a, double b, double u, double tmax) {
       }
     } else {
       res(0) = tmax;
-      res(1) = pow(a,2)/b - pow(-a,2)/(2*b);
+      if(tmax > -a/b){
+        res(1) = pow(a,2)/b - pow(-a,2)/(2*b);
+      } else {
+        res(1) = -(a*tmax + b*pow(tmax,2)/2);
+      }
     }
     return(res);
 
-  } else if ( a >= 0 & b > 0 ){
+  } else if ( a >= eps & b > 0 ){
     tsim = -a/b + sqrt(pow(a/b,2) + 2*u/b);
     if(tsim < tmax){
       res(0) = tsim; res(1) = -u;
     } else {
       res(0) = tmax; res(1) = -(a*tmax + b*pow(tmax,2)/2);
-    }
-    return(res);
-
-  } else if ( a > 0 & b == 0 ){
-    tsim = u/a;
-    if(tsim < tmax){
-      res(0) = tsim; res(1) = -u;
-    } else {
-      res(0) = tmax; res(1) = -a*tmax;
     }
     return(res);
 

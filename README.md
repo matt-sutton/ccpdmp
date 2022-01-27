@@ -11,9 +11,9 @@ define a Markov process sampling the distribution of interest.
 ![](animations/ZigZag.gif)
 
 For more information see Joris Bierken’s
-[Overview](https://diamweb.ewi.tudelft.nl/~joris/pdmps.html) and the
+[Overview](https://diamweb.ewi.tudelft.nl/~joris/pdmps.html), the
 great Julia package
-[ZigZagBoomerang](https://github.com/mschauer/ZigZagBoomerang.jl).
+[ZigZagBoomerang](https://github.com/mschauer/ZigZagBoomerang.jl) and our Arxiv preprint: [https://arxiv.org/abs/2112.12897](https://arxiv.org/abs/2112.12897).
 
 This package implements the concave-convex PDMP algorithm to facilitate
 sampling from distributions of interest (particularly Bayesian
@@ -36,9 +36,9 @@ gradients of the log target or explicit concave-convex decomposition.
 You can find documentation on the following:
 
 1.  [Simulating a Poisson process using concave-convex
-    thinning](experiments/simulating-poisson-process.md)
+    thinning](https://github.com/matt-sutton/ccpdmp/blob/main/experiments/simulating-poission-process.md)
 
-2.  [Exact simulation examples](experiments/exact-thinning.md)
+2.  [Exact simulation examples](https://github.com/matt-sutton/ccpdmp/blob/main/experiments/exact-thinning.md)
 
 ## Quickstart
 
